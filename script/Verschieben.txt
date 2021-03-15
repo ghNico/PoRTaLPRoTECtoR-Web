@@ -1,0 +1,25 @@
+import shutil
+
+source = r'C:\Users\Nirom\Documents\GitHub\Python\script\maps'
+destination1 = r'C:\Users\Nirom\Documents\GitHub\Python\script\maps\leicht'
+destination2 = r'C:\Users\Nirom\Documents\GitHub\Python\script\maps\mittel'
+destination3 = r'C:\Users\Nirom\Documents\GitHub\Python\script\maps\schwer'
+
+for i in range(87416):
+    sum =0
+    map =np.load(f'maps/map ({i+1}).npy')
+
+    for y in range(6):
+        for x in range(13):
+            if map[y,x] == 8:
+                sum+=1
+    if sum <31:
+        np.save(f'maps/leicht/map{i}.npy',map)
+    elif sum >35:
+        np.save(f'maps/schwer/map{i}.npy',map)
+    else:
+        np.save(f'maps/mittel/map{i}.npy',map)
+    print(i)
+
+exit(1)
+
