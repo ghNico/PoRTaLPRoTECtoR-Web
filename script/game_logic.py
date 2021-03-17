@@ -55,12 +55,12 @@ def startup(width, height):
     mapladen('schwer',np.random.randint(1,20000))
 
 
-def richtungsEntscheid(pfad,sum):
+def richtungsEntscheid(sum):
     global WINDOW
-    akt = pfad[sum][0]
-    naechst = pfad[sum+1][0]
-    px = 50+(pfad[sum][1]*140)
-    py = (pfad[sum][2])*140
+    akt = PFAD[sum][0]
+    naechst = PFAD[sum+1][0]
+    px = 50+(PFAD[sum][1]*140)
+    py = (PFAD[sum][2])*140
     if akt == 'oben' and naechst == 'rechts' or akt == 'links' and naechst == 'unten':
         WINDOW.blit(knick_rechts_unten, (px, py))
     elif akt == 'oben' and naechst == 'links':
@@ -126,7 +126,7 @@ def mapzeichnen():
     for y in range(6):
         tx = 0
         if y > 0:
-            tx = 40
+            tx = 50
         for x in range(13):
             wert = MAP[y, x]
             if wert == 0:
@@ -136,7 +136,7 @@ def mapzeichnen():
                 WINDOW.blit(hindernis, (tx, ty))
                 tx += 140
             elif wert == 8:
-                richtungsEntscheid(PFAD, sum)
+                richtungsEntscheid(sum)
                 sum += 1
                 tx += 140
             elif wert == 1:
@@ -145,11 +145,12 @@ def mapzeichnen():
             else:
                 WINDOW.blit(ende, (tx, ty))
                 tx += 140
+
         ty += 140
 
 def draw_window():
     global WINDOW
-    WINDOW.fill((255, 255, 255))
+    WINDOW.fill((192, 192, 192))
     mapzeichnen()
     pygame.display.update()
 

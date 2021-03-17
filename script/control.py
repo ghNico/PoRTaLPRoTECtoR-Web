@@ -1,5 +1,5 @@
 from game_logic import *
-
+import time
 startup(1920, 1080)
 clock = pygame.time.Clock()
 running = True
@@ -12,5 +12,4 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     draw_window()
-
 pygame.quit()
