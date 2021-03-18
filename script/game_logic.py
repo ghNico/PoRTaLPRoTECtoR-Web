@@ -23,7 +23,7 @@ knick_links_unten = pygame.image.load('weg_knick.png')
 knick_rechts_unten = pygame.transform.rotate(knick_links_unten, 90)
 knick_rechts_oben = pygame.transform.rotate(knick_links_unten, 180)
 knick_links_oben = pygame.transform.rotate(knick_links_unten, 270)
-
+turm = pygame.image.load('assets/tower/turm.png')
 
 def guckeweiter(weg, map, altx, alty):
     map[alty, altx] = 0
@@ -173,6 +173,9 @@ def mapzeichnen():
             elif wert == 1:
                 WINDOW.blit(anfang, (tx, ty))
                 tx += 190
+            elif wert == 3:
+                WINDOW.blit(turm, (tx, ty))
+                tx += 140
             else:
                 WINDOW.blit(ende, (tx, ty))
                 tx += 140
@@ -203,7 +206,7 @@ def draw_window():
 
 
 def on_action():
-    global knoepfe, gedrückt, actionlist
+    global knoepfe, gedrückt, actionlist, MAP
     state = pygame.mouse.get_pressed()[0]
     if state and not gedrückt:
         gedrückt = True
@@ -212,7 +215,8 @@ def on_action():
                 actionlist.append(k.text)
         for t in turmfelder:
             if t.isOver():
-                print((t.x,t.y))
+                print(((t.x)-50)/140, t.y/140)
+                MAP[t.y//140,((t.x)-50)//140] = 3
     elif not state:
         gedrückt = False
 
