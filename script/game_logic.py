@@ -8,9 +8,14 @@ MAP = None
 PFAD = None
 FPS = 60
 rot = (255, 0, 0)
+
+selectedTower = None
+selectedTowerField = None
+
 knoepfe = []
+UpgradeKnopf = None
 gedrückt = False
-actionlist = []
+
 running = True
 turmfelder = []
 turmfelder_gesetzt = False
@@ -34,6 +39,8 @@ tower5 = pygame.image.load('assets/tower/tower (5).png')
 tower6 = pygame.image.load('assets/tower/tower (6).png')
 tower7 = pygame.image.load('assets/tower/tower (7).png')
 tower8 = pygame.image.load('assets/tower/tower (8).png')
+
+tower1_2 = pygame.image.load('assets/tower/Chess.png')
 
 
 def guckeweiter(weg, map, altx, alty):
@@ -132,7 +139,7 @@ def mapladen(mode, zahl):
 def knoepfeladen():
     global knoepfe
     knoepfe.append(Button(rot, 1755, 1000, 50, 50, pygame.transform.scale(anfang, (50,50)), "Spiel beenden"))
-    knoepfe.append(Informations(260, 870, 140, 140, pygame.transform.scale(tower1, (140, 140)), "", "Tower 1", "450G"))
+    knoepfe.append(Informations(260, 870, 140, 140, pygame.transform.scale(tower1, (140, 140)), "", "Tower 1", "Shoots bullets", "10 shots per minute", "450G"))
     knoepfe.append(Informations(440, 870, 140, 140, pygame.transform.scale(tower2, (140, 140)), "", "Tower 2", "450G"))
     knoepfe.append(Informations(620, 870, 140, 140, pygame.transform.scale(tower3, (140, 140)), "", "Tower 3", "450G"))
     knoepfe.append(Informations(800, 870, 140, 140, pygame.transform.scale(tower4, (140, 140)), "", "Tower 4", "450G"))
@@ -140,7 +147,6 @@ def knoepfeladen():
     knoepfe.append(Informations(1160, 870, 140, 140, pygame.transform.scale(tower6, (140, 140)), "", "Tower 6", "450G"))
     knoepfe.append(Informations(1340, 870, 140, 140, pygame.transform.scale(tower7, (140, 140)), "", "Tower 7", "450G"))
     knoepfe.append(Informations(1520, 870, 140, 140, pygame.transform.scale(tower8, (140, 140)), "", "Tower 8", "450G"))
-    knoepfe.append(Informations(70, 900, 100, 100, pygame.transform.scale(tower1, (100,100)), "Upgrades", "test", "test"))
 
 
 def mapzeichnen():
@@ -183,16 +189,20 @@ def mapzeichnen():
                 WINDOW.blit(tower7, (tx, ty))
             elif wert == 18:
                 WINDOW.blit(tower8, (tx, ty))
+            elif wert == 21:
+                WINDOW.blit(pygame.transform.scale(tower1_2, (140, 140)), (tx, ty))
             tx += 140
         ty += 140
     turmfelder_gesetzt = True
 
 
 def knoepfezeichnen():
-    global WINDOW
+    global WINDOW, UpgradeKnopf
 
     for k in knoepfe:
         k.draw(WINDOW)
+
+    UpgradeKnopf.draw(WINDOW)
 
 
 def begrenzungzeichnen():
@@ -212,42 +222,69 @@ def draw_window():
 
 
 def on_action():
-    global knoepfe, gedrückt, actionlist
+    global knoepfe, selectedTower, selectedTowerField, gedrückt, UpgradeKnopf
     state = pygame.mouse.get_pressed()[0]
     if state and not gedrückt:
         gedrückt = True
         for k in knoepfe:
             if k.isOver():
-                actionlist.append(k.text1)
+                selectedTower = k
         for t in turmfelder:
             if t.isOver():
-                actionlist.append(("Turmfeld",t.x,t.y))
+                selectedTowerField = t
+        if UpgradeKnopf.isOver():
+                print("upgrade")
+                print(selectedTowerField.y//140,(selectedTowerField.x-50)//140)
+                MAP[(selectedTowerField.y//140,(selectedTowerField.x-50)//140)] += 10
+                selectedTower = None
+                selectedTowerField = None
     elif not state:
         gedrückt = False
 
 
 def handle_input():
-    global actionlist, running
-    if len(actionlist) == 1:
-        if actionlist[0] == "Spiel beenden":
+    global running, selectedTower, selectedTowerField
+
+    if selectedTower != None and selectedTowerField == None:
+        if selectedTower.name == "Spiel beenden":
             running = False
-            actionlist.remove(actionlist[0])
-    elif len(actionlist) == 2:
-        if "Tower" in actionlist[0] and "Tower" in actionlist[1]:
-            actionlist.remove(actionlist[0])
-        elif actionlist[1] == "Spiel beenden":
-            print("SPIEEEL BEEENDEN")
-            running = False
-        elif "Tower" in actionlist[1]:
-            print("JA HIER")
-            actionlist.remove(actionlist[0])
-        elif "Turmfeld" in actionlist[1][0] and "Tower" in actionlist[0]:
-            MAP[actionlist[1][2]//140,(actionlist[1][1]-50)//140] = 10 + int(actionlist[0][6:])
-            print(MAP)
-            actionlist.remove(actionlist[1])
-            actionlist.remove(actionlist[0])
-        else:
-            pass
+            selectedTower = None
+            selectedTowerField = None
+            #print("Tower und kein Feld")
+    elif selectedTower != None and selectedTowerField != None and MAP[selectedTowerField.y//140, (selectedTowerField.x-50)//140] == 0:
+            MAP[selectedTowerField.y//140,(selectedTowerField.x-50)//140] = 10 + int(selectedTower.name[6:])
+            selectedTower = None
+            selectedTowerField = None
+            #print("Tower und leeres Feld")
+    elif selectedTower != None and selectedTowerField != None and MAP[selectedTowerField.y // 140, (selectedTowerField.x - 50) // 140] != 0:
+            selectedTowerField = None
+            #print("Tower und volles Feld")
+    elif selectedTower == None and selectedTowerField != None and MAP[selectedTowerField.y // 140, (selectedTowerField.x - 50) // 140] != 0:
+            selectedTower = None
+            #print("kein Tower und volles Feld")
+    elif selectedTower == None and selectedTowerField != None and MAP[selectedTowerField.y // 140, (selectedTowerField.x - 50) // 140] == 0:
+            selectedTowerField = None
+            #print("kein Tower und leeres Feld")
+
+
+
+
+def upgrade_Listener():
+    global selectedTower, selectedTowerField, UpgradeKnopf
+
+    if selectedTower != None and selectedTowerField == None or selectedTower != None and selectedTowerField != None:
+        if "Tower" in selectedTower.name:
+            UpgradeKnopf = Informations(80, 900, 100, 100, pygame.transform.scale(selectedTower.image, (80, 80)), "Information", selectedTower.name, selectedTower.description, selectedTower.spm, selectedTower.costs)
+    elif selectedTower == None and selectedTowerField != None:
+            nextStage = MAP[selectedTowerField.y//140, (selectedTowerField.x-50)//140] + 10
+            if (nextStage == 21):
+                UpgradeKnopf = Informations(80, 900, 100, 100, pygame.transform.scale(tower1_2, (80, 80)), "Upgrade", "Tower 1", "Upgrades Range", "+10", "500")
+    else:
+        UpgradeKnopf = Informations(80, 900, 100, 100, pygame.transform.scale(tower1, (0, 0)), "Upgrades", "nothing selected")
+
+
+
+
 
 
 startup(1920, 1080)
@@ -258,7 +295,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    upgrade_Listener()
     draw_window()
     on_action()
     handle_input()
 pygame.quit()
+
+
+"""
+    Für Transparenz:
+    ---------------
+    tower1 = pygame.image.load('assets/tower/tower (1).png').convert()
+    tower1.set_alpha(50)
+    von 0-255
+"""

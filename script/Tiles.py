@@ -15,10 +15,10 @@ class Tiles:
         return False
 
 class Button(Tiles):
-    def __init__(self, color, x, y, width, height, image, text=''):
+    def __init__(self, color, x, y, width, height, image, name=''):
         super().__init__(x, y, width, height)
         self.color = color
-        self.text = text
+        self.name = name
         self.image = image
         self.rect = pygame.Rect(x, y, width, height)
     def draw(self, win):
@@ -26,34 +26,37 @@ class Button(Tiles):
         pygame.draw.rect(win, self.color, self.rect, 0)
         if self.image != '':
             win.blit(self.image, (self.x , self.y))
-        if self.text != '':
+        if self.name != '':
             font = pygame.font.SysFont('comicsans', 20)
-            text = font.render(self.text, True, (0, 0, 0))
-            win.blit(text, (
-                self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+            name = font.render(self.name, True, (0, 0, 0))
+            win.blit(name, (
+                self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height / 2 - name.get_height() / 2)))
 
 class Informations(Tiles):
-    def __init__(self, x, y, width, height, image, headline='', text1='', text2='', text3=''):
+    def __init__(self, x, y, width, height, image, headline='', name='', description='', spm='', costs=''):
         super().__init__(x, y, width, height)
         self.headline = headline
-        self.text1 = text1
-        self.text2 = text2
-        self.text3 = text3
+        self.name = name
+        self.costs = costs
+        self.description = description
+        self.spm = spm
+        self.costs = costs
         self.image = image
         self.rect = pygame.Rect(x, y, width, height)
+
     def draw(self, win):
         win.blit(self.image, (self.x, self.y))
         font = pygame.font.SysFont('comicsans', 20)
         font_headline = pygame.font.SysFont('comicsans', 20, True, True)
         headline = font_headline.render(self.headline, True, (0, 0, 0))
-        text1 = font.render(self.text1, True, (0, 0, 0))
-        text2 = font.render(self.text2, True, (0, 0, 0))
-        text3 = font.render(self.text3, True, (0, 0, 0))
-        if headline == '':
-            win.blit(text1, (self.x + (self.width / 2 - text1.get_width() / 2), self.y + (self.height) + 10))
-            win.blit(text2, (self.x + (self.width / 2 - text2.get_width() / 2), self.y + (self.height) + 30))
+        name = font.render(self.name, True, (0, 0, 0))
+        description = font.render(self.description, True, (0, 0, 0))
+        costs = font.render(self.costs, True, (0, 0, 0))
+        if self.headline == '':
+            win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height) + 10))
+            win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
         else:
             win.blit(headline, (self.x + (self.width / 2 - headline.get_width() / 2), self.y - 20 ))
-            win.blit(text1, (self.x + (self.width / 2 - text1.get_width() / 2), self.y + (self.height) + 10))
-            win.blit(text2, (self.x + (self.width / 2 - text2.get_width() / 2), self.y + (self.height) + 30))
-            win.blit(text3, (self.x + (self.width / 2 - text2.get_width() / 2), self.y + (self.height) + 40))
+            win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height) - 10))
+            win.blit(description, (self.x + (self.width / 2 - description.get_width() / 2), self.y + (self.height) + 10))
+            win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
