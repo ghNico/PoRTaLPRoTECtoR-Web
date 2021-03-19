@@ -1,5 +1,7 @@
 from Tiles import *
 import numpy as np
+import time
+startzeit = time.time()
 
 WINDOW = None
 MAP = None
@@ -23,7 +25,16 @@ knick_links_unten = pygame.image.load('weg_knick.png')
 knick_rechts_unten = pygame.transform.rotate(knick_links_unten, 90)
 knick_rechts_oben = pygame.transform.rotate(knick_links_unten, 180)
 knick_links_oben = pygame.transform.rotate(knick_links_unten, 270)
-turm = pygame.image.load('assets/tower/turm.png')
+
+tower1 = pygame.image.load('assets/tower/tower (1).png')
+tower2 = pygame.image.load('assets/tower/tower (2).png')
+tower3 = pygame.image.load('assets/tower/tower (3).png')
+tower4 = pygame.image.load('assets/tower/tower (4).png')
+tower5 = pygame.image.load('assets/tower/tower (5).png')
+tower6 = pygame.image.load('assets/tower/tower (6).png')
+tower7 = pygame.image.load('assets/tower/tower (7).png')
+tower8 = pygame.image.load('assets/tower/tower (8).png')
+
 
 def guckeweiter(weg, map, altx, alty):
     map[alty, altx] = 0
@@ -105,22 +116,8 @@ def generiereHindernisse(map):
             for x in range(13):
                 if k[y, x] == 0:
                     abstand = abstandzuweg(map, x, y)
-                    if abstand == 1:
-                        value = np.random.randint(0, 100)
-                        if value < 5:
-                            k[y, x] = 5
-                            sum += 1
-                    elif abstand == 2:
-                        value = np.random.randint(0, 100)
-                        if value < 20:
-                            k[y, x] = 5
-                            sum += 1
-                    elif abstand == 3:
-                        value = np.random.randint(0, 100)
-                        if value < 50:
-                            k[y, x] = 5
-                            sum += 1
-                    elif abstand == 4:
+                    value = np.random.randint(0, 100)
+                    if abstand == 1 and value < 5 or abstand == 2 and value < 20 or abstand == 3 and value < 50 or abstand == 4:
                         k[y, x] = 5
                         sum += 1
     return k
@@ -134,18 +131,16 @@ def mapladen(mode, zahl):
 
 def knoepfeladen():
     global knoepfe
-    knoepfe.append(Button(rot, 5, 855, 50, 50, anfang, "Pause"))
-    knoepfe.append(Button(rot, 5, 910, 50, 50, anfang, "Start"))
-    knoepfe.append(Button(rot, 5, 965, 50, 50, anfang, "Spiel beenden"))
-    knoepfe.append(Button(rot, 5, 1020, 50, 50, anfang, "Tower 1"))
-    knoepfe.append(Button(rot, 60, 855, 50, 50, anfang, "Tower 2"))
-    knoepfe.append(Button(rot, 60, 910, 50, 50, anfang, "Tower 3"))
-    knoepfe.append(Button(rot, 60, 965, 50, 50, anfang, "Tower 4"))
-    knoepfe.append(Button(rot, 60, 1020, 50, 50, anfang, "Tower 5"))
-    knoepfe.append(Button(rot, 115, 855, 50, 50, anfang, "Tower 6"))
-    knoepfe.append(Button(rot, 115, 910, 50, 50, anfang, "Tower 7"))
-    knoepfe.append(Button(rot, 115, 965, 50, 50, anfang, "Tower 8"))
-    knoepfe.append(Button(rot, 115, 1020, 50, 50, anfang, "Tower 9"))
+    knoepfe.append(Button(rot, 1755, 1000, 50, 50, pygame.transform.scale(anfang, (50,50)), "Spiel beenden"))
+    knoepfe.append(Informations(260, 870, 140, 140, pygame.transform.scale(tower1, (140, 140)), "", "Tower 1", "450G"))
+    knoepfe.append(Informations(440, 870, 140, 140, pygame.transform.scale(tower2, (140, 140)), "", "Tower 2", "450G"))
+    knoepfe.append(Informations(620, 870, 140, 140, pygame.transform.scale(tower3, (140, 140)), "", "Tower 3", "450G"))
+    knoepfe.append(Informations(800, 870, 140, 140, pygame.transform.scale(tower4, (140, 140)), "", "Tower 4", "450G"))
+    knoepfe.append(Informations(980, 870, 140, 140, pygame.transform.scale(tower5, (140, 140)), "", "Tower 5", "450G"))
+    knoepfe.append(Informations(1160, 870, 140, 140, pygame.transform.scale(tower6, (140, 140)), "", "Tower 6", "450G"))
+    knoepfe.append(Informations(1340, 870, 140, 140, pygame.transform.scale(tower7, (140, 140)), "", "Tower 7", "450G"))
+    knoepfe.append(Informations(1520, 870, 140, 140, pygame.transform.scale(tower8, (140, 140)), "", "Tower 8", "450G"))
+    knoepfe.append(Informations(70, 900, 100, 100, pygame.transform.scale(tower1, (100,100)), "Upgrades", "test", "test"))
 
 
 def mapzeichnen():
@@ -162,24 +157,33 @@ def mapzeichnen():
                 WINDOW.blit(bauen, (tx, ty))
                 if not turmfelder_gesetzt:
                     turmfelder.append(Tiles(tx,ty,140,140))
-                tx += 140
             elif wert == 5:
                 WINDOW.blit(hindernis, (tx, ty))
-                tx += 140
             elif wert == 8:
                 richtungsEntscheid(sum)
                 sum += 1
-                tx += 140
             elif wert == 1:
                 WINDOW.blit(anfang, (tx, ty))
-                tx += 190
-            elif wert == 3:
-                WINDOW.blit(turm, (tx, ty))
-                tx += 140
-            else:
+                tx += 50
+            elif wert == 2:
                 WINDOW.blit(ende, (tx, ty))
-                tx += 140
-
+            elif wert == 11:
+                WINDOW.blit(tower1, (tx, ty))
+            elif wert == 12:
+                WINDOW.blit(tower2, (tx, ty))
+            elif wert == 13:
+                WINDOW.blit(tower3, (tx, ty))
+            elif wert == 14:
+                WINDOW.blit(tower4, (tx, ty))
+            elif wert == 15:
+                WINDOW.blit(tower5, (tx, ty))
+            elif wert == 16:
+                WINDOW.blit(tower6, (tx, ty))
+            elif wert == 17:
+                WINDOW.blit(tower7, (tx, ty))
+            elif wert == 18:
+                WINDOW.blit(tower8, (tx, ty))
+            tx += 140
         ty += 140
     turmfelder_gesetzt = True
 
@@ -202,21 +206,22 @@ def draw_window():
     mapzeichnen()
     begrenzungzeichnen()
     knoepfezeichnen()
+    timetext = pygame.font.SysFont('comicsans', 20).render(str(int(time.time()-startzeit)), True, (0, 0, 0))
+    WINDOW.blit(timetext, (1800,1000))
     pygame.display.update()
 
 
 def on_action():
-    global knoepfe, gedrückt, actionlist, MAP
+    global knoepfe, gedrückt, actionlist
     state = pygame.mouse.get_pressed()[0]
     if state and not gedrückt:
         gedrückt = True
         for k in knoepfe:
             if k.isOver():
-                actionlist.append(k.text)
+                actionlist.append(k.text1)
         for t in turmfelder:
             if t.isOver():
-                print(((t.x)-50)/140, t.y/140)
-                MAP[t.y//140,((t.x)-50)//140] = 3
+                actionlist.append(("Turmfeld",t.x,t.y))
     elif not state:
         gedrückt = False
 
@@ -225,20 +230,24 @@ def handle_input():
     global actionlist, running
     if len(actionlist) == 1:
         if actionlist[0] == "Spiel beenden":
-            print("SPIEEEL BEEENDEN")
             running = False
             actionlist.remove(actionlist[0])
     elif len(actionlist) == 2:
-        if "Tower" in actionlist[0]:
-            print(actionlist[0])
-        if actionlist[1] == "Spiel beenden":
+        if "Tower" in actionlist[0] and "Tower" in actionlist[1]:
+            actionlist.remove(actionlist[0])
+        elif actionlist[1] == "Spiel beenden":
             print("SPIEEEL BEEENDEN")
             running = False
         elif "Tower" in actionlist[1]:
             print("JA HIER")
             actionlist.remove(actionlist[0])
-        elif "Turmfeld" in actionlist[1]:
-            print("HUCH")
+        elif "Turmfeld" in actionlist[1][0] and "Tower" in actionlist[0]:
+            MAP[actionlist[1][2]//140,(actionlist[1][1]-50)//140] = 10 + int(actionlist[0][6:])
+            print(MAP)
+            actionlist.remove(actionlist[1])
+            actionlist.remove(actionlist[0])
+        else:
+            pass
 
 
 startup(1920, 1080)
