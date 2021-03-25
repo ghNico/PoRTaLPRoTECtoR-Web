@@ -5,112 +5,92 @@ from Tiles import *
 
 WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
 
-
-
 selectedTower = None
 selectedTowerField = None
 
-turmfelder = []
-turmfelder_gesetzt = False
-
-angle = 0
+towerfields = []
+towerplace_bool = False
 
 
 # Texturen:
-anfang = pygame.image.load('anfang.png')
-ende = pygame.image.load('ende.png')
-weghor = pygame.image.load('weg_gerade.png')
-wegver = pygame.transform.rotate(weghor, 90)
-bauen = pygame.image.load('bauen.png')
-hindernis = pygame.image.load('hindernis.png')
-weggerade = pygame.image.load("assets/tiles/Gerade.JPG")
-weggerade = pygame.transform.scale(weggerade, (140, 140))
-wegver2 = pygame.transform.rotate(weggerade, 90)
-knick_links_unten = pygame.image.load('assets/tiles/Kurve.JPG')
-knick_links_unten = pygame.transform.scale(knick_links_unten, (140, 140))
-knick_rechts_unten = pygame.transform.rotate(knick_links_unten, 90)
-knick_rechts_oben = pygame.transform.rotate(knick_links_unten, 180)
-knick_links_oben = pygame.transform.rotate(knick_links_unten, 270)
+start_map = pygame.transform.scale(pygame.image.load('anfang.png'), (140, 140))
+end_map = pygame.transform.scale(pygame.image.load('ende.png'), (140, 140))
+way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.JPG"), (140, 140))
+way_vertical = pygame.transform.scale(pygame.transform.rotate(way_horizontal, 90), (140, 140))
+clickable_field = pygame.transform.scale(pygame.image.load('bauen.png'), (140, 140))
+obstacle_map = pygame.transform.scale(pygame.image.load('hindernis.png'), (140, 140))
+curve1 = pygame.transform.scale(pygame.image.load('assets/tiles/Kurve.JPG'), (140, 140))
+curve1 = pygame.transform.scale(curve1, (140, 140))
+curve2 = pygame.transform.rotate(curve1, 90)
+curve3 = pygame.transform.rotate(curve1, 180)
+curve4 = pygame.transform.rotate(curve1, 270)
 
-
-tower1 = pygame.image.load('assets/tower/tower (1).png')
-tower2 = pygame.image.load('assets/tower/tower (2).png')
-tower3 = pygame.image.load('assets/tower/tower (3).png')
-tower4 = pygame.image.load('assets/tower/tower (4).png')
-tower5 = pygame.image.load('assets/tower/tower (5).png')
-tower6 = pygame.image.load('assets/tower/tower (6).png')
-tower7 = pygame.image.load('assets/tower/tower (7).png')
-tower8 = pygame.image.load('assets/tower/tower (8).png')
-
-
-tower1 = pygame.image.load('assets/tower/Tower1.1_Ground.png')
-tower1_rotate = pygame.transform.scale(tower1, (120,120))
-tower1 = pygame.transform.scale(tower1, (140, 140))
-
-tower1_2 = pygame.image.load('assets/tower/Chess.png')
-
-tower = Tower(100, 300, 140, 140, pygame.transform.scale(tower1, (140, 140)),0)
-
+tower_1 = []
+tower_2 = []
+tower_3 = []
+for x in range(1,9):
+    tower_1.append(pygame.image.load(f'assets/tower/tower 1 ({x}).png'))
+    tower_2.append(pygame.image.load(f'assets/tower/tower 2 ({x}).png'))
+    tower_3.append(pygame.image.load(f'assets/tower/tower 3 ({x}).png'))
 
 
 # Erkennt den Weg auf unserem NumpyArray (Spielfeld)
-def LookAhead(weg, map, altx, alty):
-    map[alty, altx] = 0
-    if altx < 12 and map[alty, altx + 1] == 8:  # rechts
-        weg.append(("rechts", altx + 1, alty))
-        LookAhead(weg, map, altx + 1, alty)
-    elif altx > 0 and map[alty, altx - 1] == 8:  # links
-        weg.append(("links", altx - 1, alty))
-        LookAhead(weg, map, altx - 1, alty)
-    elif alty > 0 and map[alty - 1, altx] == 8:  # oben
-        weg.append(("oben", altx, alty - 1))
-        LookAhead(weg, map, altx, alty - 1)
-    elif alty < 5 and map[alty + 1, altx] == 8:  # unten
-        weg.append(("unten", altx, alty + 1))
-        LookAhead(weg, map, altx, alty + 1)
-    elif altx < 12 and map[alty, altx + 1] == 2:  # rechts
-        weg.append(("rechts", altx + 1, alty))
-    elif altx > 0 and map[alty, altx - 1] == 2:  # links
-        weg.append(("links", altx - 1, alty))
-    elif alty > 0 and map[alty - 1, altx] == 2:  # oben
-        weg.append(("oben", altx, alty - 1))
-    elif alty < 5 and map[alty + 1, altx] == 2:  # unten
-        weg.append(("unten", altx, alty + 1))
-    return weg
+def LookAhead(way, map, pos_x, pos_y):
+    map[pos_y, pos_x] = 0
+    if pos_x < 12 and map[pos_y, pos_x + 1] == 8:  # rechts
+        way.append(("rechts", pos_x + 1, pos_y))
+        LookAhead(way, map, pos_x + 1, pos_y)
+    elif pos_x > 0 and map[pos_y, pos_x - 1] == 8:  # links
+        way.append(("links", pos_x - 1, pos_y))
+        LookAhead(way, map, pos_x - 1, pos_y)
+    elif pos_y > 0 and map[pos_y - 1, pos_x] == 8:  # oben
+        way.append(("oben", pos_x, pos_y - 1))
+        LookAhead(way, map, pos_x, pos_y - 1)
+    elif pos_y < 5 and map[pos_y + 1, pos_x] == 8:  # unten
+        way.append(("unten", pos_x, pos_y + 1))
+        LookAhead(way, map, pos_x, pos_y + 1)
+    elif pos_x < 12 and map[pos_y, pos_x + 1] == 2:  # rechts
+        way.append(("rechts", pos_x + 1, pos_y))
+    elif pos_x > 0 and map[pos_y, pos_x - 1] == 2:  # links
+        way.append(("links", pos_x - 1, pos_y))
+    elif pos_y > 0 and map[pos_y - 1, pos_x] == 2:  # oben
+        way.append(("oben", pos_x, pos_y - 1))
+    elif pos_y < 5 and map[pos_y + 1, pos_x] == 2:  # unten
+        way.append(("unten", pos_x, pos_y + 1))
+    return way
+
 
 # Wegtextur wird gezeichnet
-def DrawPath(sum):
+def DrawPath(path_pos):
     global WINDOW
-    akt = PFAD[sum][0]
-    naechst = PFAD[sum + 1][0]
-    px = 50 + (PFAD[sum][1] * 140)
-    py = (PFAD[sum][2]) * 140
-    if akt == 'oben' and naechst == 'rechts' or akt == 'links' and naechst == 'unten':
-        WINDOW.blit(knick_rechts_unten, (px, py))
-    elif akt == 'oben' and naechst == 'links':
-        WINDOW.blit(knick_links_unten, (px, py))
-    elif akt == 'unten' and naechst == 'rechts' or akt == 'links' and naechst == 'oben':
-        WINDOW.blit(knick_rechts_oben, (px, py))
-    elif akt == 'unten' and naechst == 'unten' or akt == 'oben' and naechst == 'oben':
-        WINDOW.blit(wegver2, (px, py))
-    elif akt == 'rechts' and naechst == 'rechts' or akt == 'links' and naechst == 'links':
-        WINDOW.blit(weggerade, (px, py))
-    elif akt == 'rechts' and naechst == 'unten':
-        WINDOW.blit(knick_links_unten, (px, py))
-    elif akt == 'rechts' and naechst == 'oben' or akt == 'unten' and naechst == 'links':
-        WINDOW.blit(knick_links_oben, (px, py))
+    current_pos = PATH[path_pos][0]
+    next_pos = PATH[path_pos + 1][0]
+    pos_x = 50 + (PATH[path_pos][1] * 140)
+    pos_y = (PATH[path_pos][2]) * 140
+    if current_pos == 'oben' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'unten':
+        WINDOW.blit(curve2, (pos_x, pos_y))
+    elif current_pos == 'oben' and next_pos == 'links' or current_pos == 'rechts' and next_pos == 'unten':
+        WINDOW.blit(curve1, (pos_x, pos_y))
+    elif current_pos == 'unten' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'oben':
+        WINDOW.blit(curve3, (pos_x, pos_y))
+    elif current_pos == 'unten' and next_pos == 'unten' or current_pos == 'oben' and next_pos == 'oben':
+        WINDOW.blit(way_vertical, (pos_x, pos_y))
+    elif current_pos == 'rechts' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'links':
+        WINDOW.blit(way_horizontal, (pos_x, pos_y))
+    elif current_pos == 'rechts' and next_pos == 'oben' or current_pos == 'unten' and next_pos == 'links':
+        WINDOW.blit(curve4, (pos_x, pos_y))
 
 
 # Hindernisse: Abstand von Feld zu Weg (return Abstand)
-def DistanceToPath(map, posx, posy):
-    if posx < 12 and map[posy, posx + 1] == 8 or posx > 0 and map[posy, posx - 1] == 8 or posy > 0 and map[
-        posy - 1, posx] == 8 or posy < 5 and map[posy + 1, posx] == 8:
+def DistanceToPath(map, pos_x, pos_y):
+    if pos_x < 12 and map[pos_y, pos_x + 1] == 8 or pos_x > 0 and map[pos_y, pos_x - 1] == 8 or pos_y > 0 and map[
+        pos_y - 1, pos_x] == 8 or pos_y < 5 and map[pos_y + 1, pos_x] == 8:
         return 1
-    elif posx < 11 and map[posy, posx + 2] == 8 or posx > 0 and map[posy, posx - 2] == 8 or posy > 0 and map[
-        posy - 2, posx] == 8 or posy < 4 and map[posy + 2, posx] == 8:
+    elif pos_x < 11 and map[pos_y, pos_x + 2] == 8 or pos_x > 0 and map[pos_y, pos_x - 2] == 8 or pos_y > 0 and map[
+        pos_y - 2, pos_x] == 8 or pos_y < 4 and map[pos_y + 2, pos_x] == 8:
         return 2
-    elif posx < 10 and map[posy, posx + 3] == 8 or posx > 0 and map[posy, posx - 3] == 8 or posy > 0 and map[
-        posy - 3, posx] == 8 or posy < 3 and map[posy + 3, posx] == 8:
+    elif pos_x < 10 and map[pos_y, pos_x + 3] == 8 or pos_x > 0 and map[pos_y, pos_x - 3] == 8 or pos_y > 0 and map[
+        pos_y - 3, pos_x] == 8 or pos_y < 3 and map[pos_y + 3, pos_x] == 8:
         return 3
     else:
         return 4
@@ -119,89 +99,114 @@ def DistanceToPath(map, posx, posy):
 # Hindernisse: Je weiter entfernt ein Feld vom Weg ist, umso wahrscheinlicher ist das auftreten eines Hindernisses (return k = manipulierte MAP)
 def GenerateObstacles(map):
     k = map
-    sum = 0
-    while sum < 12:
+    sum_obstacles = 0
+    while sum_obstacles < 12:
         for y in range(6):
             for x in range(13):
                 if k[y, x] == 0:
-                    abstand = DistanceToPath(map, x, y)
+                    distance = DistanceToPath(map, x, y)
                     value = np.random.randint(0, 100)
-                    if abstand == 1 and value < 5 or abstand == 2 and value < 20 or abstand == 3 and value < 50 or abstand == 4:
+                    if distance == 1 and value < 5 or distance == 2 and value < 20 or distance == 3 and value < 50 or distance == 4:
                         k[y, x] = 5
-                        sum += 1
+                        sum_obstacles += 1
     return k
-
-
-
-
 
 
 # NumpyArray wird ausgewertet => Texturen werden gezeichnet
 def DrawMap():
-    global turmfelder_gesetzt, angle
-    sum = 0
+    global towerplace_bool, angle
+    count_ways = 0
     ty = 0
     for y in range(6):
         tx = 0
         if y > 0:
             tx = 50
         for x in range(13):
-            wert = MAP[y, x]
-            if wert == 0:
-                WINDOW.blit(bauen, (tx, ty))
-                if not turmfelder_gesetzt:
-                    turmfelder.append(Tiles(tx,ty,140,140))
-            elif wert == 5:
-                WINDOW.blit(hindernis, (tx, ty))
-            elif wert == 8:
-                DrawPath(sum)
-                sum += 1
-            elif wert == 1:
-                WINDOW.blit(anfang, (tx, ty))
+            value = MAP[y, x]
+            if value == 0:
+                WINDOW.blit(clickable_field, (tx, ty))
+                if not towerplace_bool:
+                    towerfields.append(Tiles(tx, ty, 140, 140))
+            elif value == 5:
+                WINDOW.blit(obstacle_map, (tx, ty))
+            elif value == 8:
+                DrawPath(count_ways)
+                count_ways += 1
+            elif value == 1:
+                WINDOW.blit(start_map, (tx, ty))
                 tx += 50
-            elif wert == 2:
-                WINDOW.blit(ende, (tx, ty))
-            elif wert == 11:
-                tower_lokal = Tower(tx, ty, 140, 140, pygame.transform.scale(tower1, (140, 140)),0)
-                tower_lokal.draw(WINDOW)
-                Rotate(tower_lokal)
-            elif wert == 12:
-                WINDOW.blit(tower2, (tx, ty))
-            elif wert == 13:
-                WINDOW.blit(tower3, (tx, ty))
-            elif wert == 14:
-                WINDOW.blit(tower4, (tx, ty))
-            elif wert == 15:
-                WINDOW.blit(tower5, (tx, ty))
-            elif wert == 16:
-                WINDOW.blit(tower6, (tx, ty))
-            elif wert == 17:
-                WINDOW.blit(tower7, (tx, ty))
-            elif wert == 18:
-                WINDOW.blit(tower8, (tx, ty))
-            elif wert == 21:
-                WINDOW.blit(pygame.transform.scale(tower1_2, (140, 140)), (tx, ty))
+            elif value == 2:
+                WINDOW.blit(end_map, (tx, ty))
+            elif value == 11:
+                WINDOW.blit(tower_1[0], (tx, ty))
+            elif value == 12:
+                WINDOW.blit(tower_1[1], (tx, ty))
+            elif value == 13:
+                WINDOW.blit(tower_1[2], (tx, ty))
+            elif value == 14:
+                WINDOW.blit(tower_1[3], (tx, ty))
+            elif value == 15:
+                WINDOW.blit(tower_1[4], (tx, ty))
+            elif value == 16:
+                WINDOW.blit(tower_1[5], (tx, ty))
+            elif value == 17:
+                WINDOW.blit(tower_1[6], (tx, ty))
+            elif value == 18:
+                WINDOW.blit(tower_1[7], (tx, ty))
+            elif value == 21:
+                WINDOW.blit(tower_2[0], (tx, ty))
+            elif value == 22:
+                WINDOW.blit(tower_2[1], (tx, ty))
+            elif value == 23:
+                WINDOW.blit(tower_2[2], (tx, ty))
+            elif value == 24:
+                WINDOW.blit(tower_2[3], (tx, ty))
+            elif value == 25:
+                WINDOW.blit(tower_2[4], (tx, ty))
+            elif value == 26:
+                WINDOW.blit(tower_2[5], (tx, ty))
+            elif value == 27:
+                WINDOW.blit(tower_2[6], (tx, ty))
+            elif value == 28:
+                WINDOW.blit(tower_2[7], (tx, ty))
+            elif value == 31:
+                WINDOW.blit(tower_3[0], (tx, ty))
+            elif value == 32:
+                WINDOW.blit(tower_3[1], (tx, ty))
+            elif value == 33:
+                WINDOW.blit(tower_3[2], (tx, ty))
+            elif value == 34:
+                WINDOW.blit(tower_3[3], (tx, ty))
+            elif value == 35:
+                WINDOW.blit(tower_3[4], (tx, ty))
+            elif value == 36:
+                WINDOW.blit(tower_3[5], (tx, ty))
+            elif value == 37:
+                WINDOW.blit(tower_3[6], (tx, ty))
+            elif value == 38:
+                WINDOW.blit(tower_3[7], (tx, ty))
             tx += 140
         ty += 140
-    turmfelder_gesetzt = True
+    towerplace_bool = True
 
 
 # Rotates Images
-def Rotate(tower):
-    global WINDOW
-    print(tower.angle)
-    tower.incrementangle()
-    print(tower.angle)
-    # rotieren und in einem neuen "surface" speichern
-    rotiert = pygame.transform.rotate(tower.image, tower.angle)
+#def Rotate(tower):
+#    global WINDOW
+#    print(tower.angle)
+#    tower.incrementangle()
+#    print(tower.angle)
+#    # rotieren und in einem neuen "surface" speichern
+#    image_rotation = pygame.transform.rotate(tower.image, tower.angle)
 
     # Bestimmen der neuen Abmessungen (nach Rotation ändern sich diese!)
-    groesse = rotiert.get_rect()
+#    image_size = image_rotation.get_rect()
 
     # Ausgabe
-    WINDOW.blit(rotiert, (tower.pos_x+70 - groesse.center[0], tower.pos_y+70 - groesse.center[1]))
+#    WINDOW.blit(image_rotation, (tower.pos_x + 70 - image_size.center[0], tower.pos_y + 70 - image_size.center[1]))
 
     # pygame.draw.rect(WINDOW, (255, 255, 255), (x - groesse.center[0], y - groesse.center[1], groesse.width, groesse.height), 1)
 
+
 MAP = GenerateObstacles(np.load(f'maps/{"leicht"}/map ({10}).npy'))
-PFAD = LookAhead([], np.load(f'maps/{"leicht"}/map ({10}).npy'), 0, 0)
+PATH = LookAhead([], np.load(f'maps/{"leicht"}/map ({10}).npy'), 0, 0)

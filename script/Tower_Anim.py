@@ -34,8 +34,7 @@ class Tower(pygame.sprite.Sprite):
     def incrementangle(self):
         self.angle+=1
     def draw(self, win):
-        pass
-        #win.blit(self.image, (self.pos_x+70 - self.currentGroesse.center[0], self.pos_y+70-self.currentGroesse.center[1]))
+        win.blit(self.image, (self.pos_x, self.pos_y))
 
     def update(self):
         self.current_sprite += 1
