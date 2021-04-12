@@ -12,6 +12,7 @@ towerfields = []
 towerplace_bool = False
 
 
+
 # Texturen:
 start_map = pygame.transform.scale(pygame.image.load('anfang.png'), (140, 140))
 end_map = pygame.transform.scale(pygame.image.load('ende.png'), (140, 140))

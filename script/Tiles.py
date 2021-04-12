@@ -1,11 +1,13 @@
 import pygame
 
+
 class Tiles:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+
     def isOver(self):
         # Pos is the mouse position or a tuple of (x,y) coordinates
         pos = pygame.mouse.get_pos()
@@ -14,6 +16,7 @@ class Tiles:
                 return True
         return False
 
+
 class Button(Tiles):
     def __init__(self, color, x, y, width, height, image, name=''):
         super().__init__(x, y, width, height)
@@ -21,16 +24,18 @@ class Button(Tiles):
         self.name = name
         self.image = image
         self.rect = pygame.Rect(x, y, width, height)
+
     def draw(self, win):
         # Call this method to draw the button on the screen
         pygame.draw.rect(win, self.color, self.rect, 0)
         if self.image != '':
-            win.blit(self.image, (self.x , self.y))
+            win.blit(self.image, (self.x, self.y))
         if self.name != '':
             font = pygame.font.SysFont('comicsans', 20)
             name = font.render(self.name, True, (0, 0, 0))
             win.blit(name, (
                 self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height / 2 - name.get_height() / 2)))
+
 
 class Informations(Tiles):
     def __init__(self, x, y, width, height, image, headline='', name='', description='', spm='', costs=''):
@@ -56,7 +61,28 @@ class Informations(Tiles):
             win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height) + 10))
             win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
         else:
-            win.blit(headline, (self.x + (self.width / 2 - headline.get_width() / 2), self.y - 20 ))
+            win.blit(headline, (self.x + (self.width / 2 - headline.get_width() / 2), self.y - 20))
             win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height) - 10))
-            win.blit(description, (self.x + (self.width / 2 - description.get_width() / 2), self.y + (self.height) + 10))
+            win.blit(description,
+                     (self.x + (self.width / 2 - description.get_width() / 2), self.y + (self.height) + 10))
             win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
+
+
+class Enemy(Tiles):
+    def __init__(self, x, y, width, height, health, velocity, direction, images, path):
+        super().__init__(x, y, width, height)
+        self.health = health
+        self.velocity = velocity
+        self.direction = direction
+        self.images = images
+        self.path = path
+
+    def draw(self, win):
+        win.blit(self.images[self.direction], (self.x, self.y))
+
+
+class Maps(Tiles):
+    def __init__(self, x, y, width, height, value, difficulty):
+        super().__init__(x, y, width, height)
+        self.value = value
+        self.difficulty = difficulty
