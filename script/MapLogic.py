@@ -1,25 +1,30 @@
 from Tiles import *
-from Tower_Anim import *
+#from Tower_Anim import *
 import numpy as np
 import time
 
+# Player Values
+Gold = 1000
+
+# Game Values
 WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
 MAP = None
 PATH = None
 starttime = None
 FPS = 60
 frames = 0
-factor = 0
+game_state = 1
+pressed = False
+maps = []
+wayfields = []
+towerfields = []
 buttons = []
 sideinfo = None
-pressed = False
 running = True
 enemy_path = 0
 selectedTowerToBuild = None
 selectedPosition = None
 towerplace_bool = False
-
-
 
 # Texturen:
 start_map = pygame.transform.scale(pygame.image.load('anfang.png'), (190, 140))
@@ -48,11 +53,8 @@ print(tower_image)
 
 
 enemys = []
-for x in range(1,2):
-    enemys.append(Enemy(0,0,140,140,1,1,0,[pygame.image.load(f"assets/enemys/destroyer ({x}).png")],None))
-
-
-
+for x in range(1, 2):
+    enemys.append(Enemy(0, 0, 140, 140, 1, 1, 0, [pygame.image.load(f"assets/enemys/destroyer ({x}).png")], None))
 
 
 def create_movement():
@@ -188,10 +190,9 @@ def handle_input():
             selectedTowerToBuild = None
             selectedPosition = None
         print("Tower und leeres Feld")
-    elif selectedTower is not None and selectedTowerField is not None and MAP[selectedTowerField.y // 140, (
-                                                                                                                   selectedTowerField.x - 50) // 140] != 0 or selectedTower is None and selectedTowerField is not None and \
-            MAP[selectedTowerField.y // 140, (selectedTowerField.x - 50) // 140] == 0:
-        selectedTowerField = None
+    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0 or selectedTowerToBuild is None and selectedPosition is not None and \
+            MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
+        selectedPosition = None
         print("Tower und volles Feld")
     elif selectedTowerToBuild is None and selectedPosition is not None and MAP[
         selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0:
@@ -216,12 +217,11 @@ def upgrade_Listener():
                                     UpgradeTower.costs, UpgradeTower.towerRange, UpgradeTower.damage, UpgradeTower.value,
                                     "Upgrade", "UpgradeTower.name", "UpgradeTower.description", "UpgradeTower.spm")
         else:
-            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_1[0], (0, 0)), "Upgrades",
-                                    "nothing to upgrade")
+            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), "Upgrades",
+                                    "nothing to upgrade", "Upgrades Range", "+20", "1000")
     else:
-        sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_1[0], (0, 0)), "Upgrades",
-                                "nothing selected")
-
+        sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), "Upgrades",
+                                "nothing selected", "", "", "", "")
 
 
 
@@ -235,11 +235,36 @@ def upgrade_Listener():
 
 
 
-    # Bestimmen der neuen Abmessungen (nach Rotation ändern sich diese!)
-#    image_size = image_rotation.get_rect()
 
-    # Ausgabe
-#    WINDOW.blit(image_rotation, (tower.pos_x + 70 - image_size.center[0], tower.pos_y + 70 - image_size.center[1]))
+# ------------------------------------------------------------------------------------------------------------
+# -----------------------------------------Angepasst----------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------
+
+# Erkennt den Weg auf unserem NumpyArray (Spielfeld)
+def LookAhead(way, map, pos_x, pos_y):
+    map[pos_y, pos_x] = 0
+    if pos_x < 12 and map[pos_y, pos_x + 1] == 8:  # rechts
+        way.append(("rechts", pos_x + 1, pos_y))
+        LookAhead(way, map, pos_x + 1, pos_y)
+    elif pos_x > 0 and map[pos_y, pos_x - 1] == 8:  # links
+        way.append(("links", pos_x - 1, pos_y))
+        LookAhead(way, map, pos_x - 1, pos_y)
+    elif pos_y > 0 and map[pos_y - 1, pos_x] == 8:  # oben
+        way.append(("oben", pos_x, pos_y - 1))
+        LookAhead(way, map, pos_x, pos_y - 1)
+    elif pos_y < 5 and map[pos_y + 1, pos_x] == 8:  # unten
+        way.append(("unten", pos_x, pos_y + 1))
+        LookAhead(way, map, pos_x, pos_y + 1)
+    elif pos_x < 12 and map[pos_y, pos_x + 1] == 2:  # rechts
+        way.append(("rechts", pos_x + 1, pos_y))
+    elif pos_x > 0 and map[pos_y, pos_x - 1] == 2:  # links
+        way.append(("links", pos_x - 1, pos_y))
+    elif pos_y > 0 and map[pos_y - 1, pos_x] == 2:  # oben
+        way.append(("oben", pos_x, pos_y - 1))
+    elif pos_y < 5 and map[pos_y + 1, pos_x] == 2:  # unten
+        way.append(("unten", pos_x, pos_y + 1))
+    return way
+
 
 def enemyRotation(current_pos):
     if current_pos == 'oben':
@@ -463,4 +488,3 @@ while running:
     display_state()
     pygame.display.update()
 pygame.quit()
-
