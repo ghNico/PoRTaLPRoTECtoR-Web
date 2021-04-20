@@ -1,3 +1,5 @@
+import pygame
+
 from Tiles import *
 #from Tower_Anim import *
 import numpy as np
@@ -5,6 +7,7 @@ import time
 
 # Player Values
 Gold = 1000
+UserHealth = 100
 
 # Game Values
 WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
@@ -19,6 +22,7 @@ maps = []
 wayfields = []
 towerfields = []
 buttons = []
+endscreenButtons = []
 sideinfo = None
 running = True
 enemy_path = 0
@@ -38,18 +42,16 @@ curve1 = pygame.transform.scale(curve1, (140, 140))
 curve2 = pygame.transform.rotate(curve1, 90)
 curve3 = pygame.transform.rotate(curve1, 180)
 curve4 = pygame.transform.rotate(curve1, 270)
-
 field_mini = pygame.image.load("assets/mini_map/empty_field.png")
 way_mini = pygame.image.load("assets/mini_map/way_field.png")
 
-# wussten nicht wie einfacher geht lul:
 
+# wussten nicht wie einfacher geht lul:
 tower_image = [[0 for x in range(8)] for y in range(3)]
 for x in range(1, 9):
     for y in range(1, 4):
         print((y,x))
         tower_image[y-1][x-1] = (pygame.image.load(f'assets/tower/tower {y} ({x}).png'))
-print(tower_image)
 
 
 enemys = []
@@ -58,6 +60,15 @@ for x in range(1, 2):
 
 
 def create_movement():
+    """create_movement
+    was tut es
+
+    Arguments:
+
+    Test:
+        -wie kann man es testen?
+
+    """
     global PATH
     for e in enemys:
         enemy_movement = []
@@ -87,21 +98,21 @@ def load_buttons():
     buttons.append(
         Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(start_map, (50, 50)), "Spiel beenden"))
     buttons.append(
-        Informations(260, 870, 140, 140, pygame.transform.scale(tower_image[1][0], (140, 140)), "450", "100", "80", 11 ,"Headline", "Tower 2", "Description", "schaden"))
+        Informations(260, 870, 140, 140, pygame.transform.scale(tower_image[0][0], (140, 140)), 450, 100, 80, 11 ,"Headline", "Tower 1", "Description", "schaden"))
     buttons.append(
-        Informations(440, 870, 140, 140, pygame.transform.scale(tower_image[1][1], (140, 140)), "450", "100", "80", 12, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(440, 870, 140, 140, pygame.transform.scale(tower_image[0][1], (140, 140)), 450, 200, 80, 12, "Headline", "Tower 2", "Description", "schaden"))
     buttons.append(
-        Informations(620, 870, 140, 140, pygame.transform.scale(tower_image[1][2], (140, 140)), "450", "100", "80", 13, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(620, 870, 140, 140, pygame.transform.scale(tower_image[0][2], (140, 140)), 450, 300, 80, 13, "Headline", "Tower 3", "Description", "schaden"))
     buttons.append(
-        Informations(800, 870, 140, 140, pygame.transform.scale(tower_image[1][3], (140, 140)), "450", "100", "80", 14, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(800, 870, 140, 140, pygame.transform.scale(tower_image[0][3], (140, 140)), 450, 100, 80, 14, "Headline", "Tower 4", "Description", "schaden"))
     buttons.append(
-        Informations(980, 870, 140, 140, pygame.transform.scale(tower_image[1][4], (140, 140)), "450", "100", "80", 15, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(980, 870, 140, 140, pygame.transform.scale(tower_image[0][4], (140, 140)), 450, 100, 80, 15, "Headline", "Tower 5", "Description", "schaden"))
     buttons.append(
-        Informations(1160, 870, 140, 140, pygame.transform.scale(tower_image[1][5], (140, 140)), "450", "100", "80", 16, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(1160, 870, 140, 140, pygame.transform.scale(tower_image[0][5], (140, 140)), 450, 100, 80, 16, "Headline", "Tower 6", "Description", "schaden"))
     buttons.append(
-        Informations(1340, 870, 140, 140, pygame.transform.scale(tower_image[1][6], (140, 140)), "450", "100", "80", 17, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(1340, 870, 140, 140, pygame.transform.scale(tower_image[0][6], (140, 140)), 450, 100, 80, 17, "Headline", "Tower 7", "Description", "schaden"))
     buttons.append(
-        Informations(1520, 870, 140, 140, pygame.transform.scale(tower_image[1][7], (140, 140)), "450", "100", "80", 18, "Headline", "Tower 2", "Description", "schaden"))
+        Informations(1520, 870, 140, 140, pygame.transform.scale(tower_image[0][7], (140, 140)), 450, 100, 80, 18, "Headline", "Tower 8", "Description", "schaden"))
 
 
 def animate():
@@ -122,20 +133,31 @@ def draw_buttons():
 
 
 def draw_window():
-    global WINDOW
+    global WINDOW, UserHealth
 
     WINDOW.fill((192, 192, 192))
     draw_buttons()
     timetext = pygame.font.SysFont('comicsans', 20).render(str(int(time.time() - starttime)), True, (0, 0, 0))
     WINDOW.blit(timetext, (1800, 1000))
+    # Show gold:
+    # ------------
     goldText = pygame.font.SysFont('comicsans', 20).render("Gold: ", True, (0, 0, 0))
     goldValue = pygame.font.SysFont('comicsans', 20).render(str(int(Gold)), True, (0, 0, 0))
     WINDOW.blit(goldText, (1750, 900))
     WINDOW.blit(goldValue, (1800, 900))
+    # Show Health:
+    HealthText = pygame.font.SysFont('comicsans', 20).render("Health: ", True, (0, 0, 0))
+    WINDOW.blit(HealthText, (1750, 970))
+    actualHealth = 50*UserHealth/100
+    pygame.draw.rect(WINDOW, (255, 0, 0), (1800, 970, 50, 15))
+    pygame.draw.rect(WINDOW, (0, 255, 0), (1800, 970, actualHealth, 15))
+
+
+
 
 
 def on_action():
-    global buttons, selectedTowerToBuild, selectedPosition, pressed, sideinfo, Gold
+    global buttons, selectedTowerToBuild, selectedPosition, pressed, sideinfo, Gold, tower_image
 
     state = pygame.mouse.get_pressed()[0]
     if state and not pressed:
@@ -143,20 +165,16 @@ def on_action():
         for k in buttons:
             if k.isOver():
                 selectedTowerToBuild = k
-                print("AMUMMU")
         for t in towerfields:
             if t.isOver():
                 selectedPosition = t
-                print("Ahri")
         if sideinfo.isOver() and selectedPosition is not None:
-            print(selectedTowerToBuild)
             if MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
-                if Gold >= int(selectedTowerToBuild.costs):
+                if Gold >= int(sideinfo.costs):
                     MAP[(selectedPosition.y // 140, (selectedPosition.x - 50) // 140)] += 10
                     #[Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height, selectedTowerToBuild.image, selectedTowerToBuild.towerRange, selectedTowerToBuild.damage, selectedTowerToBuild.costs) if value==selectedPosition else value for value in towerfields]
-                    # selectedPosition.Upgrade()
-                    Gold -= int(selectedTowerToBuild.costs)
-                    print(MAP)
+                    selectedPosition.upgrade(tower_image)
+                    Gold -= int(sideinfo.costs)
                 else:
                     print("Zu wenig Geld")
                 selectedTowerToBuild = None
@@ -174,11 +192,12 @@ def handle_input():
             selectedTowerToBuild = None
             selectedPosition = None
             print("Tower und kein Feld")
-    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[
-        selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
+    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
         if MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
             if Gold >= int(selectedTowerToBuild.costs):
                 value = 10 + int(selectedTowerToBuild.name[6:])
+                #print(selectedTowerToBuild.name)
+                #print(value)
                 MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] = value
                 for f in range(len(towerfields)):
                     if towerfields[f] == selectedPosition:
@@ -186,7 +205,6 @@ def handle_input():
                 Gold -= int(selectedTowerToBuild.costs)
             else:
                 print("Zu wenig Geld")
-            #Hier noch iwie boolean
             selectedTowerToBuild = None
             selectedPosition = None
         print("Tower und leeres Feld")
@@ -211,17 +229,19 @@ def upgrade_Listener():
     elif selectedTowerToBuild is None and selectedPosition is not None:
         nextstage = MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] + 10
         if 20 < nextstage < 40:
-            print(selectedPosition)
-            UpgradeTower = selectedPosition.upgrade()
+            #print(selectedPosition.value)
+            dummie = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height, selectedPosition.image, selectedPosition.towerRange, selectedPosition.damage, selectedPosition.value, selectedPosition.costs)
+            UpgradeTower = dummie.upgrade(tower_image)
             sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(UpgradeTower.image, (80, 80)),
-                                    UpgradeTower.costs, UpgradeTower.towerRange, UpgradeTower.damage, UpgradeTower.value,
+                                    UpgradeTower.costs, UpgradeTower.towerRange-selectedPosition.towerRange, UpgradeTower.damage-selectedPosition.towerRange, UpgradeTower.value,
                                     "Upgrade", "UpgradeTower.name", "UpgradeTower.description", "UpgradeTower.spm")
+            #hier auch range
         else:
             sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), "Upgrades",
-                                    "nothing to upgrade", "Upgrades Range", "+20", "1000")
+                                    "nothing to upgrade", "", "", "", "")
     else:
         sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), "Upgrades",
-                                "nothing selected", "", "", "", "")
+                                "nothing selected", "", "", "test", "")
 
 
 
@@ -380,16 +400,31 @@ def DrawMap():
 
 
 def draw_enemys():
-    global frames, WINDOW
+    global frames, WINDOW, UserHealth, enemys
+
     for e in enemys:
-        if frames >= 600:
+        if frames >= 100:
+            pos = frames - 100
+            if len(e.path) == pos:
+                print(e)
+                enemys.remove(e)
+                if e.health >0:
+                    UserHealth -= 10
+                frames = 0
+            else:
+                e.direction = e.path[pos][2]
+                e.x = 50 + e.path[pos][0] * 140
+                e.y = e.path[pos][1] * 140
+                e.draw(WINDOW)
+
+
+"""
             try:
                 pos = frames - 600
                 e.x = 50 + e.path[pos][0] * 140
                 e.y = e.path[pos][1] * 140
                 e.draw(WINDOW)
             except IndexError:
-                print(frames)
                 print("Indexerror")
                 frames = 0
 
@@ -411,7 +446,6 @@ def draw_mini_map(map, pos_x, pos_y):
 
 
 # Operativen Systeme:
-
 def draw_menue():
     global maps, WINDOW
     leicht = [np.random.randint(1, 22661), np.random.randint(1, 22661), np.random.randint(1, 22661)]
@@ -457,8 +491,76 @@ def map_selection():
         pressed = False
 
 
+def draw_endscreen():
+    global maps, WINDOW
+
+    WINDOW.fill((192, 192, 192))
+    GameOverText = pygame.font.SysFont('comicsans', 100, True, True).render("Game Over", True, (0, 0, 0))
+    WINDOW.blit(GameOverText, (960-GameOverText.get_width()//2, 540-GameOverText.get_height()//2))
+
+    if endscreenButtons == []:
+        endscreenButtons.append(Button((255,0,0), 960 -50, 640, 100, 100 , pygame.transform.scale(start_map, (100, 100))))
+    for btn in endscreenButtons:
+        btn.draw(WINDOW)
+
+
+def display_endscreen():
+    global pressed, MAP, PATH, game_state, starttime
+
+    draw_endscreen()
+    state = pygame.mouse.get_pressed()[0]
+    if state and not pressed:
+        pressed = True
+        for btn in endscreenButtons:
+            if btn.isOver():
+                ReInit()
+                draw_menue()
+                game_state = 1
+    elif not state:
+        pressed = False
+
+
+def drawTowerRange():
+    for t in towerfields:
+        if t.isOver():
+            t.showRange(WINDOW)
+
+    # Nur ausprobieren:
+    for e in enemys:
+        if e.isOver():
+            e.getDamage(10)
+
+def ReInit():
+    global Gold, WINDOW, MAP, PATH, starttime, frames, game_state, pressed, maps, wayfields, towerfields, buttons, endscreenButtons, sideinfo, running, enemy_path, selectedEnemy, selectedTowerToBuild, selectedPosition, towerplace_bool, UserHealth
+
+    # Player Values
+    Gold = 1000
+    UserHealth = 100
+
+    # Game Values
+    WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
+    MAP = None
+    PATH = None
+    starttime = None
+    # FPS = 120
+    frames = 0
+    game_state = 1
+    pressed = False
+    maps = []
+    wayfields = []
+    towerfields = []
+    buttons = []
+    endscreenButtons = []
+    sideinfo = None
+    running = True
+    enemy_path = 0
+    selectedTowerToBuild = None
+    selectedPosition = None
+    towerplace_bool = False
+
+
 def display_state():
-    global frames, Gold
+    global frames, Gold, game_state
 
     if game_state == 0:
         upgrade_Listener()
@@ -471,7 +573,8 @@ def display_state():
         Gold += 0.8
     elif game_state == 1:
         map_selection()
-        pass
+    elif game_state == 2:
+        display_endscreen()
     else:
         pass
 
