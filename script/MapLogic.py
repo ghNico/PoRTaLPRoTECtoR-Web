@@ -1,5 +1,4 @@
 import pygame
-
 from Tiles import *
 from Main_Screen import LoadMainScreen
 #from Tower_Anim import *
@@ -10,6 +9,7 @@ import time
 Gold = 1000
 UserHealth = 100
 
+
 # Game Values
 WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
 MAP = None
@@ -17,7 +17,7 @@ PATH = None
 starttime = None
 #FPS = 120
 frames = 0
-game_state = 1
+game_state = 0
 pressed = False
 maps = []
 wayfields = []
@@ -31,15 +31,18 @@ selectedTowerToBuild = None
 selectedPosition = None
 towerplace_bool = False
 offset = 0
+wave = 1
+
 
 # Text-Font
 font = None
 font_headline = None
 font_basic = None
 
+
 # Texturen:
-start_map = pygame.transform.scale(pygame.image.load('portal.jpg'), (190, 140))
-end_map = pygame.transform.scale(pygame.image.load('portal_red.jpg'), (190, 140))
+start_map = pygame.transform.scale(pygame.image.load('portal.jpg'), (140, 140))
+end_map = pygame.transform.scale(pygame.image.load('portal_red.jpg'), (140, 140))
 way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.JPG"), (140, 140))
 way_vertical = pygame.transform.scale(pygame.transform.rotate(way_horizontal, 90), (140, 140))
 clickable_field = pygame.transform.scale(pygame.image.load('bauen.png'), (140, 140))
@@ -53,6 +56,7 @@ field_mini = pygame.image.load("assets/mini_map/empty_field.png")
 way_mini = pygame.image.load("assets/mini_map/way_field.png")
 background = pygame.image.load("Galaxy.jpg")
 background = pygame.transform.scale(background, (1920, 1080))
+
 
 # Bullets:
 bullet_image = [0 for x in range(8)]
@@ -125,8 +129,6 @@ def load_buttons():
     global buttons
     buttons.append(
         Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(start_map, (50, 50)), "Spiel beenden"))
-    print( pygame.transform.scale(tower_image[0][0], (140, 140)))
-    print( pygame.transform.scale(tower_image2[0][0], (140, 140)))
     buttons.append(
         Informations(x=260, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][0], (140, 140)), image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=450, towerRange=200, damage=15, value=11, headline="Headline", name="Tower 1", description="Description"))
     buttons.append(
@@ -166,23 +168,31 @@ def draw_window():
     global WINDOW, UserHealth
 
     WINDOW.fill((192, 192, 192))
-    WINDOW.blit(background, (0,0))
+    WINDOW.blit(background, (0, 0))
     draw_buttons()
-    timetext = pygame.font.SysFont('comicsans', 20).render(str(int(time.time() - starttime)), True, (0, 0, 0))
-    WINDOW.blit(timetext, (1800, 1000))
+    # Show Wave
+    waveValue = pygame.font.SysFont('comicsans', 20).render(str(wave), True, (255, 255, 255))
+    waveText = pygame.font.SysFont('comicsans', 20).render("Wave: ", True, (255, 255, 255))
+    WINDOW.blit(waveText, (1750, 900))
+    WINDOW.blit(waveValue, (1800, 900))
+    # Show Time
+    timeValue = pygame.font.SysFont('comicsans', 20).render(str(int(time.time() - starttime)), True, (255, 255, 255))
+    timeText = pygame.font.SysFont('comicsans', 20).render("Time: ", True, (255, 255, 255))
+    WINDOW.blit(timeText, (1750, 925))
+    WINDOW.blit(timeValue, (1800, 925))
     # Show gold:
     # ------------
-    goldText = pygame.font.SysFont('comicsans', 20).render("Gold: ", True, (0, 0, 0))
-    goldValue = pygame.font.SysFont('comicsans', 20).render(str(int(Gold)), True, (0, 0, 0))
-    WINDOW.blit(goldText, (1750, 900))
-    WINDOW.blit(goldValue, (1800, 900))
+    goldText = pygame.font.SysFont('comicsans', 20).render("Gold: ", True, (255, 255, 255))
+    goldValue = pygame.font.SysFont('comicsans', 20).render(str(int(Gold)), True, (255, 255, 255))
+    WINDOW.blit(goldText, (1750, 950))
+    WINDOW.blit(goldValue, (1800, 950))
     # Show Health:
     # ------------
-    HealthText = pygame.font.SysFont('comicsans', 20).render("Health: ", True, (0, 0, 0))
-    WINDOW.blit(HealthText, (1750, 970))
-    actualHealth = 50*UserHealth/100
-    pygame.draw.rect(WINDOW, (255, 0, 0), (1800, 970, 50, 15))
-    pygame.draw.rect(WINDOW, (0, 255, 0), (1800, 970, actualHealth, 15))
+    HealthText = pygame.font.SysFont('comicsans', 20).render("Health: ", True, (255, 255, 255))
+    WINDOW.blit(HealthText, (1750, 975))
+    actualHealth = 50 * UserHealth / 100
+    pygame.draw.rect(WINDOW, (255, 0, 0), (1800, 975, 50, 15))
+    pygame.draw.rect(WINDOW, (0, 255, 0), (1800, 975, actualHealth, 15))
 
 
 
@@ -410,8 +420,8 @@ def CreationMapObjects():
                 DrawPath(count_ways)
                 count_ways += 1
             elif value == 1:
-                towerfields.append(Tiles(tx, ty, 140, 140, start_map))
                 tx += 50
+                towerfields.append(Tiles(tx, ty, 140, 140, start_map))
             elif value == 2:
                 towerfields.append(Tiles(tx, ty, 140, 140, end_map))
             elif value > 10 and value < 39:
@@ -434,30 +444,38 @@ def DrawMap():
 
 
 def draw_enemys():
-    global frames, WINDOW, UserHealth, enemys, spawn_offset, Gold, offset
-
+    global frames, WINDOW, UserHealth, enemys, spawn_offset, Gold, offset, wave
     i = 0
-    while i<(len(enemys)):
-        i +=offset
-        if frames >= spawn_offset[i]:
-            pos = frames - spawn_offset[i]
-            if len(enemys[i].path) == pos:
-                print(enemys[i])
-                if enemys[i].health >0:
-                    UserHealth -= 10
-                e = enemys[i]
+    while i < (len(enemys)):
+        if frames >= spawn_offset[i + offset]:
+            pos = frames - spawn_offset[i+offset]
+            e = enemys[i]
+            if pos > len(e.path):
                 enemys.remove(e)
-                offset +=1
+            elif pos == len(e.path):
+                if e.health > 0:
+                    UserHealth -= 10
+                enemys.remove(e)
+                offset += 1
             else:
-                print(i)
-                enemys[i].direction = enemys[i].path[pos][2]
-                enemys[i].x = 50 + enemys[i].path[pos][0] * 140
-                enemys[i].y = enemys[i].path[pos][1] * 140
-                enemys[i].updateRect()
-                enemys[i].draw(WINDOW)
+                e.direction = e.path[pos][2]
+                e.x = 50 + e.path[pos][0] * 140
+                e.y = e.path[pos][1] * 140
+                e.updateRect()
+                e.draw(WINDOW)
         i += 1
     if len(enemys) == 0:
         frames = 0
+        wave+=1
+        offset=0
+        spawn_offset = []
+        enemys = []
+        for i in range(10):
+            spawn_offset.append(i * 25)
+            enemys.append(Enemy(0, 0, 140, 140, 100*wave, 100*wave, 10, 0,
+                                [picture, pygame.transform.rotate(picture, 90), pygame.transform.rotate(picture, 180),
+                                 pygame.transform.rotate(picture, 270)], None))
+        create_movement()
 
 
 
@@ -523,12 +541,11 @@ def map_selection():
             if m.isOver():
                 MAP = GenerateObstacles(np.load(f'maps/{m.difficulty}/map ({m.value}).npy'))
                 PATH = LookAhead([], np.load(f'maps/{m.difficulty}/map ({m.value}).npy'), 0, 0)
-                game_state = 0
+                game_state = 2
                 load_buttons()
                 create_movement()
                 CreationMapObjects()
                 starttime = time.time()
-        print(MAP)
     elif not state:
         pressed = False
 
@@ -557,7 +574,7 @@ def display_endscreen():
             if btn.isOver():
                 ReInit()
                 draw_menue()
-                game_state = 1
+                game_state = 3
     elif not state:
         pressed = False
 
@@ -583,7 +600,7 @@ def ReInit():
     starttime = None
     # FPS = 120
     frames = 0
-    game_state = 1
+    game_state = 0
     pressed = False
     maps = []
     wayfields = []
@@ -621,9 +638,16 @@ def allTowerShootes():
 
 
 def display_state():
-    global frames, Gold, game_state, WINDOW
+    global frames, Gold, game_state, WINDOW, pressed
 
     if game_state == 0:
+        game_state = LoadMainScreen(win=WINDOW)
+        if game_state == 1:
+            pressed = True
+            draw_menue()
+    elif game_state == 1:
+        map_selection()
+    elif game_state == 2:
         upgrade_Listener()
         handle_input()
         draw_window()
@@ -634,23 +658,19 @@ def display_state():
         frames += 1
         Gold += 0.8
         if UserHealth <= 0:
-            game_state = 2
+            game_state = 3
         drawTowerRange()
-        #print(1/((time.time()-starttime)/frames))
-    elif game_state == 1:
-        #,
-        # LoadMainScreen(win=WINDOW)
-        map_selection()
-    elif game_state == 2:
+    elif game_state == 3:
         display_endscreen()
     else:
         pass
 
 
+
+
 startup()
 #clock = pygame.time.Clock()
 print(PATH)
-draw_menue()
 while running:
     #clock.tick(FPS)
     #time.sleep(0.0666)
