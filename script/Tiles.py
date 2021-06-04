@@ -1,4 +1,3 @@
-import pygame
 import math
 from Bullet import *
 
@@ -116,7 +115,6 @@ class Enemy(Tiles):
         if towerBullets != None:
             for b in towerBullets:
                 if self.rect.colliderect(b.rect):
-                    print("Collided")
                     self.getDamage(b.damage)
                     towerBullets.remove(b)
                 else:
@@ -183,58 +181,68 @@ class Tower(Tiles):
         self.TowerBullets.append(tempObject)
         allBullets.append(tempObject)
 
+    # For Rotate
+    def rotate(self, aimX, aimY):
+        try:
+            angle2 = math.degrees(math.atan((self.y - aimY) / (self.x - aimX)))
+        except ZeroDivisionError:
+            return
+        if (self.x - aimX) < 0 and (self.y - aimY) >= 0:
+            angle2 += 180
+        elif (self.x - aimX) < 0 and (self.y - aimY) < 0:
+            angle2 += 180
+        if angle2 < 0:
+            angle2 += 360
+        angle2 = 0 - angle2
+        self.angle = angle2
+
     def findEnemys(self, enemy_lst, image):
+
+        # Hier sucht den nähesten Gegner:
+        nearestEnemy = None
+        lowestDistance = 0
         for e in enemy_lst:
+            enemyX = e.x + e.width // 2
+            enemyY = e.y + e.height // 2
+            distance = math.sqrt((self.x + self.width // 2 - enemyX) ** 2 + (self.y + self.height // 2 - enemyY) ** 2)
+
+            if distance < self.towerRange:
+                if lowestDistance > distance or lowestDistance ==0:
+                    lowestDistance = distance
+                    nearestEnemy = e
+
+        if nearestEnemy != None:
             # Check ob enemy noch am Leben ist
-            if e.image != None:
-                if e.direction == 1:
+            if nearestEnemy.image != None:
+                if nearestEnemy.direction == 1:
                     # Nach oben
                     additionX = 0
                     additionY = 1
-                elif e.direction == 3:
+                elif nearestEnemy.direction == 3:
                     # Nach unten
                     additionX = 0
                     additionY = -1
-                elif e.direction == 0:
+                elif nearestEnemy.direction == 0:
                     # Nach rechts
                     additionX = 1
                     additionY = 0
-                elif e.direction == 2:
+                elif nearestEnemy.direction == 2:
                     # Nach unten
                     additionX = -1
                     additionY = 0
 
-                enemyX = e.x+e.width//2 + additionX*10
-                enemyY = e.y+e.height//2 + additionY*10
+                enemyX = nearestEnemy.x + e.width // 2 + additionX * 10
+                enemyY = nearestEnemy.y + e.height // 2 + additionY * 10
+                self.rotate(enemyX, enemyY)
+                self.spawnBullet(enemyX, enemyY, pygame.transform.rotate(image, self.angle))
 
-                distance = math.sqrt((self.x +self.width//2 - enemyX) ** 2 + (self.y + self.height//2 - enemyY) ** 2)
 
-
-                if distance < self.towerRange:
-
-                    # Winkel berechnen:
-                    angle2 = math.degrees(math.atan((self.y - enemyY) / (self.x - enemyX)))
-
-                    if (self.x - enemyX) < 0 and (self.y - enemyY) >= 0:
-                        angle2 += 180
-                    elif (self.x - enemyX) < 0 and (self.y - enemyY) < 0:
-                        angle2 += 180
-
-                    if angle2 < 0:
-                        angle2 += 360
-
-                    angle2 = 0-angle2
-
-                    self.angle = angle2
-
-                    self.spawnBullet(enemyX, enemyY, pygame.transform.rotate(image, angle2))
 
     def getValue(self):
         return self.value
 
     def getTowerLst(self):
         return self.TowerBullets
-
 
 
 class Informations(Tower):

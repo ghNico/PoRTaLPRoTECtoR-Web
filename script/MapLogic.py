@@ -1,7 +1,7 @@
-import pygame
 from Tiles import *
 from Main_Screen import LoadMainScreen
-#from Tower_Anim import *
+from Drawing import *
+from Helper import *
 import numpy as np
 import time
 
@@ -9,13 +9,11 @@ import time
 Gold = 1000
 UserHealth = 100
 
-
 # Game Values
 WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
 MAP = None
 PATH = None
 starttime = None
-#FPS = 120
 frames = 0
 game_state = 0
 pressed = False
@@ -32,89 +30,62 @@ selectedPosition = None
 towerplace_bool = False
 offset = 0
 wave = 1
-
+enemys = []
+spawn_offset = []
 
 # Text-Font
 font = None
 font_headline = None
 font_basic = None
 
-
-# Texturen:
-start_map = pygame.transform.scale(pygame.image.load('portal.jpg'), (140, 140))
-end_map = pygame.transform.scale(pygame.image.load('portal_red.jpg'), (140, 140))
+# Textures:
+start_map = pygame.transform.scale(pygame.image.load('assets/environment/portal.jpg'), (140, 140))
+end_map = pygame.transform.scale(pygame.image.load('assets/environment/portal_red.jpg'), (140, 140))
 way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.JPG"), (140, 140))
 way_vertical = pygame.transform.scale(pygame.transform.rotate(way_horizontal, 90), (140, 140))
-clickable_field = pygame.transform.scale(pygame.image.load('bauen.png'), (140, 140))
-obstacle_map = pygame.transform.scale(pygame.image.load('hindernis.png'), (140, 140))
+clickable_field = pygame.transform.scale(pygame.image.load('assets/environment/bauen.png'), (140, 140))
+obstacle_map = pygame.transform.scale(pygame.image.load('assets/environment/hindernis.png'), (140, 140))
 curve1 = pygame.transform.scale(pygame.image.load('assets/tiles/Kurve.JPG'), (140, 140))
-curve1 = pygame.transform.scale(curve1, (140, 140))
 curve2 = pygame.transform.rotate(curve1, 90)
 curve3 = pygame.transform.rotate(curve1, 180)
 curve4 = pygame.transform.rotate(curve1, 270)
 field_mini = pygame.image.load("assets/mini_map/empty_field.png")
 way_mini = pygame.image.load("assets/mini_map/way_field.png")
-background = pygame.image.load("Galaxy.jpg")
+background = pygame.image.load("assets/environment/Galaxy.jpg")
 background = pygame.transform.scale(background, (1920, 1080))
-
 
 # Bullets:
 bullet_image = [0 for x in range(8)]
 for x in range(1, 9):
-    bullet_image[x-1] = (pygame.image.load(f'assets/bullet/bullet {x}.png'))
+    bullet_image[x - 1] = (pygame.image.load(f'assets/bullet/bullet {x}.png'))
 
-
-# wussten nicht wie einfacher geht lul:
+# Tower:
 tower_image = [[0 for x in range(8)] for y in range(3)]
 for x in range(1, 9):
     for y in range(1, 4):
-        print((y,x))
-        tower_image[y-1][x-1] = (pygame.image.load(f'assets/tower/tower {y} ({x}).png'))
+        tower_image[y - 1][x - 1] = (pygame.image.load(f'assets/tower/tower {y} ({x}).png'))
 
+# Guns:
 tower_image2 = [[0 for x in range(8)] for y in range(3)]
 for x in range(1, 9):
     for y in range(1, 4):
-        print((y,x))
-        tower_image2[y-1][x-1] = (pygame.image.load(f'assets/tower/gun {y} ({x}).png'))
+        tower_image2[y - 1][x - 1] = (pygame.image.load(f'assets/tower/gun {y} ({x}).png'))
 
+# Enemys:
+picture = pygame.transform.scale(pygame.image.load(f"assets/enemys/destroyer ({2 - (wave % 2)}).png"), (140, 140))
 
-enemys = []
-picture = pygame.image.load(f"assets/enemys/destroyer (1).png")
-spawn_offset = []
 for i in range(10):
-    spawn_offset.append(i*100)
+    spawn_offset.append(i * 25)
     enemys.append(Enemy(0, 0, 140, 140, 100, 100, 10, 0,
                         [picture, pygame.transform.rotate(picture, 90), pygame.transform.rotate(picture, 180),
                          pygame.transform.rotate(picture, 270)], None))
 
 
-def create_movement():
-    """create_movement
-    was tut es
-
-    Arguments:
-
-    Test:
-        -wie kann man es testen?
+def startup():
+    """
+    Initialization of pygame
 
     """
-    global PATH
-    for e in enemys:
-        enemy_movement = []
-        for k in range(len(PATH)):
-            for i in range(0, round(100 / e.velocity)):
-                try:
-                    diffposx = PATH[k + 1][1] - PATH[k][1]
-                    diffposy = PATH[k + 1][2] - PATH[k][2]
-                    direction = enemyRotation(PATH[k+1][0])
-                except IndexError:
-                    break
-                enemy_movement.append((diffposx * (i / round(100 / e.velocity)) + PATH[k][1],
-                                       diffposy * (i / round(100 / e.velocity)) + PATH[k][2], direction))
-        e.path = enemy_movement
-
-
-def startup():
     global WINDOW, font, font_headline, font_basic
     pygame.init()
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
@@ -126,78 +97,61 @@ def startup():
 
 
 def load_buttons():
+    """
+    Set the list of buttons with all values of the towers and generate the objects
+
+    Test:
+        -screen resolution 1920x1080
+        -all values have to be balanced for the game
+
+    """
     global buttons
     buttons.append(
         Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(start_map, (50, 50)), "Spiel beenden"))
     buttons.append(
-        Informations(x=260, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][0], (140, 140)), image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=450, towerRange=200, damage=15, value=11, headline="Headline", name="Tower 1", description="Description"))
+        Informations(x=260, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][0], (140, 140)),
+                     image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=450, towerRange=200,
+                     damage=30, value=11, headline="Headline", name="Tower 1", description="Description"))
     buttons.append(
-        Informations(x=440, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][1], (140, 140)), image2=pygame.transform.scale(tower_image2[0][1], (140, 140)), costs=550, towerRange=300, damage=5, value=12, headline="Headline", name="Tower 2", description="Description"))
+        Informations(x=440, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][1], (140, 140)),
+                     image2=pygame.transform.scale(tower_image2[0][1], (140, 140)), costs=550, towerRange=300, damage=5,
+                     value=12, headline="Headline", name="Tower 2", description="Description"))
     buttons.append(
-        Informations(620, 870, 140, 140, pygame.transform.scale(tower_image[0][2], (140, 140)), pygame.transform.scale(tower_image2[0][2], (140, 140)), 450, 300, 80, 13, "Headline", "Tower 3", "Description", "schaden"))
+        Informations(620, 870, 140, 140, pygame.transform.scale(tower_image[0][2], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][2], (140, 140)), 450, 300, 10, 13, "Headline", "Tower 3",
+                     "Description", "schaden"))
     buttons.append(
-        Informations(800, 870, 140, 140, pygame.transform.scale(tower_image[0][3], (140, 140)), pygame.transform.scale(tower_image2[0][3], (140, 140)), 450, 200, 80, 14, "Headline", "Tower 4", "Description", "schaden"))
+        Informations(800, 870, 140, 140, pygame.transform.scale(tower_image[0][3], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][3], (140, 140)), 450, 210, 10, 14, "Headline", "Tower 4",
+                     "Description", "schaden"))
     buttons.append(
-        Informations(980, 870, 140, 140, pygame.transform.scale(tower_image[0][4], (140, 140)), pygame.transform.scale(tower_image2[0][4], (140, 140)), 450, 100, 80, 15, "Headline", "Tower 5", "Description", "schaden"))
+        Informations(980, 870, 140, 140, pygame.transform.scale(tower_image[0][4], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][4], (140, 140)), 450, 100, 10, 15, "Headline", "Tower 5",
+                     "Description", "schaden"))
     buttons.append(
-        Informations(1160, 870, 140, 140, pygame.transform.scale(tower_image[0][5], (140, 140)), pygame.transform.scale(tower_image2[0][5], (140, 140)), 450, 100, 80, 16, "Headline", "Tower 6", "Description", "schaden"))
+        Informations(1160, 870, 140, 140, pygame.transform.scale(tower_image[0][5], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][5], (140, 140)), 450, 100, 80, 16, "Headline", "Tower 6",
+                     "Description", "schaden"))
     buttons.append(
-        Informations(1340, 870, 140, 140, pygame.transform.scale(tower_image[0][6], (140, 140)), pygame.transform.scale(tower_image2[0][6], (140, 140)), 450, 100, 80, 17, "Headline", "Tower 7", "Description", "schaden"))
+        Informations(1340, 870, 140, 140, pygame.transform.scale(tower_image[0][6], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][6], (140, 140)), 450, 100, 80, 17, "Headline", "Tower 7",
+                     "Description", "schaden"))
     buttons.append(
-        Informations(1520, 870, 140, 140, pygame.transform.scale(tower_image[0][7], (140, 140)), pygame.transform.scale(tower_image2[0][7], (140, 140)), 450, 100, 80, 18, "Headline", "Tower 8", "Description", "schaden"))
-
-
-def animate():
-    global moving_sprites, WINDOW
-
-    # tower = Tower(100, 300, 140, 140, pygame.transform.scale(tower1, (140, 140)))
-
-    # tower.draw(WINDOW)
-
-
-def draw_buttons():
-    global WINDOW, sideinfo
-
-    for k in buttons:
-        k.draw(WINDOW)
-
-    sideinfo.draw(WINDOW)
-
-
-def draw_window():
-    global WINDOW, UserHealth
-
-    WINDOW.fill((192, 192, 192))
-    WINDOW.blit(background, (0, 0))
-    draw_buttons()
-    # Show Wave
-    waveValue = pygame.font.SysFont('comicsans', 20).render(str(wave), True, (255, 255, 255))
-    waveText = pygame.font.SysFont('comicsans', 20).render("Wave: ", True, (255, 255, 255))
-    WINDOW.blit(waveText, (1750, 900))
-    WINDOW.blit(waveValue, (1800, 900))
-    # Show Time
-    timeValue = pygame.font.SysFont('comicsans', 20).render(str(int(time.time() - starttime)), True, (255, 255, 255))
-    timeText = pygame.font.SysFont('comicsans', 20).render("Time: ", True, (255, 255, 255))
-    WINDOW.blit(timeText, (1750, 925))
-    WINDOW.blit(timeValue, (1800, 925))
-    # Show gold:
-    # ------------
-    goldText = pygame.font.SysFont('comicsans', 20).render("Gold: ", True, (255, 255, 255))
-    goldValue = pygame.font.SysFont('comicsans', 20).render(str(int(Gold)), True, (255, 255, 255))
-    WINDOW.blit(goldText, (1750, 950))
-    WINDOW.blit(goldValue, (1800, 950))
-    # Show Health:
-    # ------------
-    HealthText = pygame.font.SysFont('comicsans', 20).render("Health: ", True, (255, 255, 255))
-    WINDOW.blit(HealthText, (1750, 975))
-    actualHealth = 50 * UserHealth / 100
-    pygame.draw.rect(WINDOW, (255, 0, 0), (1800, 975, 50, 15))
-    pygame.draw.rect(WINDOW, (0, 255, 0), (1800, 975, actualHealth, 15))
-
-
+        Informations(1520, 870, 140, 140, pygame.transform.scale(tower_image[0][7], (140, 140)),
+                     pygame.transform.scale(tower_image2[0][7], (140, 140)), 450, 100, 80, 18, "Headline", "Tower 8",
+                     "Description", "schaden"))
 
 
 def on_action():
+    """
+
+    When mouse is pressed over tower or sideinfo or buttons, checks and prepare the ingame values for the handle_input function
+
+    Test:
+        -objects need isOver function
+        -every element is 140x140 and the map need to contain the value of tower to level up
+
+    """
     global buttons, selectedTowerToBuild, selectedPosition, pressed, sideinfo, Gold, tower_image
 
     state = pygame.mouse.get_pressed()[0]
@@ -213,11 +167,8 @@ def on_action():
             if MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
                 if Gold >= int(sideinfo.costs):
                     MAP[(selectedPosition.y // 140, (selectedPosition.x - 50) // 140)] += 10
-                    #[Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height, selectedTowerToBuild.image, selectedTowerToBuild.towerRange, selectedTowerToBuild.damage, selectedTowerToBuild.costs) if value==selectedPosition else value for value in towerfields]
                     selectedPosition.upgrade(tower_image, tower_image2)
                     Gold -= int(sideinfo.costs)
-                else:
-                    print("Zu wenig Geld")
                 selectedTowerToBuild = None
                 selectedPosition = None
     elif not state:
@@ -225,6 +176,18 @@ def on_action():
 
 
 def handle_input():
+    """
+    Based on the User clicks and the preparation of the on_action function the User interact with the game
+
+    Game could be closed
+
+    A Tower is selected and placed if enough gold is in the wallet
+
+    Test:
+        -to handle 2 clicks 4 different cases can raise errors
+        -all is based on 140x140 Tiles so test the Tiles size for correct selection
+
+    """
     global running, selectedTowerToBuild, selectedPosition, MAP, Gold
 
     if selectedTowerToBuild is not None and selectedPosition is None:
@@ -232,177 +195,115 @@ def handle_input():
             running = False
             selectedTowerToBuild = None
             selectedPosition = None
-            print("Tower und kein Feld")
-    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
+    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[
+        selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
         if MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
             if Gold >= int(selectedTowerToBuild.costs):
                 value = 10 + int(selectedTowerToBuild.name[6:])
-                #print(selectedTowerToBuild.name)
-                print("hier")
-                print(selectedTowerToBuild.towerRange)
                 MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] = value
                 for f in range(len(towerfields)):
                     if towerfields[f] == selectedPosition:
-                        print(selectedTowerToBuild.damage)
-                        towerfields[f]= Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height,selectedTowerToBuild.image, selectedTowerToBuild.image2,  selectedTowerToBuild.towerRange, selectedTowerToBuild.damage,  value, selectedTowerToBuild.costs)
-                        print(towerfields[f].towerRange)
+                        towerfields[f] = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width,
+                                               selectedPosition.height, selectedTowerToBuild.image,
+                                               selectedTowerToBuild.image2, selectedTowerToBuild.towerRange,
+                                               selectedTowerToBuild.damage, value, selectedTowerToBuild.costs)
                 Gold -= int(selectedTowerToBuild.costs)
-            else:
-                print("Zu wenig Geld")
             selectedTowerToBuild = None
             selectedPosition = None
-        print("Tower und leeres Feld")
-    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0 or selectedTowerToBuild is None and selectedPosition is not None and \
-            MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
+    elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0 or selectedTowerToBuild is None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
         selectedPosition = None
-        print("Tower und volles Feld")
     elif selectedTowerToBuild is None and selectedPosition is not None and MAP[
         selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0:
         selectedTowerToBuild = None
-        print("kein Tower und volles Feld")
 
 
 def upgrade_Listener():
+    """
+
+    The sideinfo contains new information based on which element is selected based on the clicks of User
+
+    Test:
+        -All needed information has to be in button object or tower object
+        -sideinfo object has to contain and store the information of two different objects
+
+    """
     global selectedTowerToBuild, selectedPosition, sideinfo, MAP
 
     if selectedTowerToBuild is not None:
         if "Tower" in selectedTowerToBuild.name:
-            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(selectedTowerToBuild.image, (80, 80)), pygame.transform.scale(selectedTowerToBuild.image2, (80, 80)),
-                                    selectedTowerToBuild.costs, selectedTowerToBuild.towerRange, selectedTowerToBuild.damage, selectedTowerToBuild.value,
-                                    selectedTowerToBuild.headline, selectedTowerToBuild.name, selectedTowerToBuild.description, selectedTowerToBuild.spm)
+            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(selectedTowerToBuild.image, (80, 80)),
+                                    pygame.transform.scale(selectedTowerToBuild.image2, (80, 80)),
+                                    selectedTowerToBuild.costs, selectedTowerToBuild.towerRange,
+                                    selectedTowerToBuild.damage, selectedTowerToBuild.value,
+                                    selectedTowerToBuild.headline, selectedTowerToBuild.name,
+                                    selectedTowerToBuild.description, selectedTowerToBuild.spm)
     elif selectedTowerToBuild is None and selectedPosition is not None:
         nextstage = MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] + 10
         if 20 < nextstage < 40:
-            #print(selectedPosition.value)
-            dummie = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height, selectedPosition.image, selectedPosition.image2, selectedPosition.towerRange, selectedPosition.damage, selectedPosition.value, selectedPosition.costs)
+            dummie = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width, selectedPosition.height,
+                           selectedPosition.image, selectedPosition.image2, selectedPosition.towerRange,
+                           selectedPosition.damage, selectedPosition.value, selectedPosition.costs)
             UpgradeTower = dummie.upgrade(tower_image, tower_image2)
-            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(UpgradeTower.image, (80, 80)), pygame.transform.scale(UpgradeTower.image2, (80, 80)),
-                                    UpgradeTower.costs, UpgradeTower.towerRange-selectedPosition.towerRange, UpgradeTower.damage-selectedPosition.damage, UpgradeTower.value,
+            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(UpgradeTower.image, (80, 80)),
+                                    pygame.transform.scale(UpgradeTower.image2, (80, 80)),
+                                    UpgradeTower.costs, UpgradeTower.towerRange - selectedPosition.towerRange,
+                                    UpgradeTower.damage - selectedPosition.damage, UpgradeTower.value,
                                     "Upgrade", "UpgradeTower.name", "UpgradeTower.description", "UpgradeTower.spm")
-            #hier auch range
         else:
-            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
+            sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)),
+                                    pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
                                     "nothing to upgrade", "", "", "", "")
     else:
-        sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)), pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
+        sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)),
+                                pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
                                 "nothing selected", "", "", "test", "")
 
 
 
-"""
-    Für Transparenz:
-    ---------------
-    tower1 = pygame.image.load('assets/tower/tower (1).png').convert()
-    tower1.set_alpha(50)
-    von 0-255
-"""
+def draw_path(path_pos):
+    """
+    Generate and store the position of a wayfield on the map at a position with the correct image based on the rotation
 
+    Arguments: postion on path
 
+    Test:
+        -Path has to be ready
+        -screen has to be 1920x1080 and all Tiles 140x140
+        -Test if the end is reached or a position not on the path
 
-
-# ------------------------------------------------------------------------------------------------------------
-# -----------------------------------------Angepasst----------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------
-
-# Erkennt den Weg auf unserem NumpyArray (Spielfeld)
-def LookAhead(way, map, pos_x, pos_y):
-    map[pos_y, pos_x] = 0
-    if pos_x < 12 and map[pos_y, pos_x + 1] == 8:  # rechts
-        way.append(("rechts", pos_x + 1, pos_y))
-        LookAhead(way, map, pos_x + 1, pos_y)
-    elif pos_x > 0 and map[pos_y, pos_x - 1] == 8:  # links
-        way.append(("links", pos_x - 1, pos_y))
-        LookAhead(way, map, pos_x - 1, pos_y)
-    elif pos_y > 0 and map[pos_y - 1, pos_x] == 8:  # oben
-        way.append(("oben", pos_x, pos_y - 1))
-        LookAhead(way, map, pos_x, pos_y - 1)
-    elif pos_y < 5 and map[pos_y + 1, pos_x] == 8:  # unten
-        way.append(("unten", pos_x, pos_y + 1))
-        LookAhead(way, map, pos_x, pos_y + 1)
-    elif pos_x < 12 and map[pos_y, pos_x + 1] == 2:  # rechts
-        way.append(("rechts", pos_x + 1, pos_y))
-    elif pos_x > 0 and map[pos_y, pos_x - 1] == 2:  # links
-        way.append(("links", pos_x - 1, pos_y))
-    elif pos_y > 0 and map[pos_y - 1, pos_x] == 2:  # oben
-        way.append(("oben", pos_x, pos_y - 1))
-    elif pos_y < 5 and map[pos_y + 1, pos_x] == 2:  # unten
-        way.append(("unten", pos_x, pos_y + 1))
-    return way
-
-
-def enemyRotation(current_pos):
-    if current_pos == 'oben':
-        return 1
-    elif current_pos == 'unten':
-        return 3
-    elif current_pos == 'rechts':
-        return 0
-    elif current_pos == 'links':
-        return 2
-
-
-# Wegtextur wird gezeichnet
-def DrawPath(path_pos):
-    global WINDOW, wayfields
+    """
+    global wayfields
 
     current_pos = PATH[path_pos][0]
     next_pos = PATH[path_pos + 1][0]
     pos_x = 50 + (PATH[path_pos][1] * 140)
     pos_y = (PATH[path_pos][2]) * 140
-    if current_pos == 'oben' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'unten':
+    if current_pos == 'up' and next_pos == 'right' or current_pos == 'left' and next_pos == 'down':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, curve2))
-        # WINDOW.blit(curve2, (pos_x, pos_y))
-    elif current_pos == 'oben' and next_pos == 'links' or current_pos == 'rechts' and next_pos == 'unten':
+    elif current_pos == 'up' and next_pos == 'left' or current_pos == 'right' and next_pos == 'down':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, curve1))
-        # WINDOW.blit(curve1, (pos_x, pos_y))
-    elif current_pos == 'unten' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'oben':
+    elif current_pos == 'down' and next_pos == 'right' or current_pos == 'left' and next_pos == 'up':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, curve3))
-        # WINDOW.blit(curve3, (pos_x, pos_y))
-    elif current_pos == 'unten' and next_pos == 'unten' or current_pos == 'oben' and next_pos == 'oben':
+    elif current_pos == 'down' and next_pos == 'down' or current_pos == 'up' and next_pos == 'up':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, way_vertical))
-        # WINDOW.blit(way_vertical, (pos_x, pos_y))
-    elif current_pos == 'rechts' and next_pos == 'rechts' or current_pos == 'links' and next_pos == 'links':
+    elif current_pos == 'right' and next_pos == 'right' or current_pos == 'left' and next_pos == 'left':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, way_horizontal))
-        # WINDOW.blit(way_horizontal, (pos_x, pos_y))
-    elif current_pos == 'rechts' and next_pos == 'oben' or current_pos == 'unten' and next_pos == 'links':
+    elif current_pos == 'right' and next_pos == 'up' or current_pos == 'down' and next_pos == 'left':
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, curve4))
-        # WINDOW.blit(curve4, (pos_x, pos_y))
 
 
-# Hindernisse: Abstand von Feld zu Weg (return Abstand)
-def DistanceToPath(map, pos_x, pos_y):
-    if pos_x < 12 and map[pos_y, pos_x + 1] == 8 or pos_x > 0 and map[pos_y, pos_x - 1] == 8 or pos_y > 0 and map[
-        pos_y - 1, pos_x] == 8 or pos_y < 5 and map[pos_y + 1, pos_x] == 8:
-        return 1
-    elif pos_x < 11 and map[pos_y, pos_x + 2] == 8 or pos_x > 0 and map[pos_y, pos_x - 2] == 8 or pos_y > 0 and map[
-        pos_y - 2, pos_x] == 8 or pos_y < 4 and map[pos_y + 2, pos_x] == 8:
-        return 2
-    elif pos_x < 10 and map[pos_y, pos_x + 3] == 8 or pos_x > 0 and map[pos_y, pos_x - 3] == 8 or pos_y > 0 and map[
-        pos_y - 3, pos_x] == 8 or pos_y < 3 and map[pos_y + 3, pos_x] == 8:
-        return 3
-    else:
-        return 4
 
+def creation_map_objects():
+    """
+    Generate based on the numpy array all fields
 
-# Hindernisse: Je weiter entfernt ein Feld vom Weg ist, umso wahrscheinlicher ist das auftreten eines Hindernisses (return k = manipulierte MAP)
-def GenerateObstacles(map):
-    k = map
-    sum_obstacles = 0
-    while sum_obstacles < 12:
-        for y in range(6):
-            for x in range(13):
-                if k[y, x] == 0:
-                    distance = DistanceToPath(map, x, y)
-                    value = np.random.randint(0, 100)
-                    if distance == 1 and value < 5 or distance == 2 and value < 20 or distance == 3 and value < 50 or distance == 4:
-                        k[y, x] = 5
-                        sum_obstacles += 1
-    return k
+    Test:
+        -check if map format is 6x13 and tiles are 140x140
+        -test if the is exact one start and exact one end
+        -test the path is without holes and has no loops
 
-
-# NumpyArray wird ausgewertet => Texturen werden gezeichnet
-def CreationMapObjects():
-    global towerplace_bool, angle, MAP, WINDOW, towerfields
+    """
+    global towerplace_bool, MAP, towerfields
     count_ways = 0
     ty = 0
     for y in range(6):
@@ -417,38 +318,42 @@ def CreationMapObjects():
             elif value == 5:
                 towerfields.append(Tiles(tx, ty, 140, 140, obstacle_map))
             elif value == 8:
-                DrawPath(count_ways)
+                draw_path(count_ways)
                 count_ways += 1
             elif value == 1:
                 tx += 50
                 towerfields.append(Tiles(tx, ty, 140, 140, start_map))
             elif value == 2:
                 towerfields.append(Tiles(tx, ty, 140, 140, end_map))
-            elif value > 10 and value < 39:
+            elif 10 < value < 39:
                 first_place = value % 10
                 second_place = value // 10
-                towerfields.append(Tiles(tx, ty, 140, 140, tower_image[second_place-1][first_place-1]))
+                towerfields.append(Tiles(tx, ty, 140, 140, tower_image[second_place - 1][first_place - 1]))
             tx += 140
         ty += 140
     towerplace_bool = True
 
 
-def DrawMap():
-    global WINDOW
-
-    for way in wayfields:
-        way.draw(WINDOW)
-
-    for tower in towerfields:
-        tower.draw(WINDOW)
-
-
 def draw_enemys():
-    global frames, WINDOW, UserHealth, enemys, spawn_offset, Gold, offset, wave
+    """
+
+    Enemy Movement and check if they need to be removed.
+
+    When    -they are dead
+            -they reached the end
+
+    If whole wave is dead generate the new wave
+
+    Test:
+        -All "old" enemys have to be removed before the new wave is spawned
+        -Correct Health decrease if Enemy dies at the end
+
+    """
+    global frames, WINDOW, UserHealth, enemys, spawn_offset, offset, wave
     i = 0
     while i < (len(enemys)):
         if frames >= spawn_offset[i + offset]:
-            pos = frames - spawn_offset[i+offset]
+            pos = frames - spawn_offset[i + offset]
             e = enemys[i]
             if pos > len(e.path):
                 enemys.remove(e)
@@ -466,105 +371,118 @@ def draw_enemys():
         i += 1
     if len(enemys) == 0:
         frames = 0
-        wave+=1
-        offset=0
+        wave += 1
+        picture = pygame.transform.scale(pygame.image.load(f"assets/enemys/destroyer ({2 - (wave % 2)}).png"),
+                                         (140, 140))
+        offset = 0
         spawn_offset = []
         enemys = []
         for i in range(10):
             spawn_offset.append(i * 25)
-            enemys.append(Enemy(0, 0, 140, 140, 100*wave, 100*wave, 10, 0,
+            enemys.append(Enemy(0, 0, 140, 140, 100 * wave, 100 * wave, 10, 0,
                                 [picture, pygame.transform.rotate(picture, 90), pygame.transform.rotate(picture, 180),
                                  pygame.transform.rotate(picture, 270)], None))
-        create_movement()
+        create_movement(PATH, enemys)
 
 
 
-def draw_mini_map(map, pos_x, pos_y):
-    ty = pos_y
-    for y in range(6):
-        tx = pos_x
-        for x in range(13):
-            value = map[y, x]
-            if value == 0:
-                WINDOW.blit(field_mini, (tx, ty))
-            elif value == 8 or value == 1 or value == 2:
-                WINDOW.blit(way_mini, (tx, ty))
-            tx += 45
-        ty += 45
-
-
-
-# Operativen Systeme:
 def draw_menue():
+    """
+
+    Draws the map selection at startup and generate 9 random maps out of the 30.000
+
+    Test:
+        -The maps have to be generated with mapgen.py
+        - maps must have 6x13 format and resolution 1920x1080
+
+    """
     global maps, WINDOW, font_headline, font_basic
 
-    leicht = [np.random.randint(1, 22661), np.random.randint(1, 22661), np.random.randint(1, 22661)]
-    mittel = [np.random.randint(1, 40557), np.random.randint(1, 40557), np.random.randint(1, 40557)]
-    schwer = [np.random.randint(1, 24198), np.random.randint(1, 24198), np.random.randint(1, 24198)]
-    # WINDOW.fill((192, 192, 192))
-    WINDOW.blit(background, (0,0))
-    # Headline:
+    easy = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
+    medium = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
+    hard = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
+    WINDOW.blit(background, (0, 0))
     headline = font_headline.render("Select a Map", True, (250, 250, 250))
-    WINDOW.blit(headline, (960 - (headline.get_width()//2), 50))
+    WINDOW.blit(headline, (960 - (headline.get_width() // 2), 50))
     pos_y = 175
     basic = font_basic.render("Easy", True, (250, 250, 250))
     WINDOW.blit(basic, (300 - (basic.get_width() // 2), 125))
-    for key in leicht:
-        map = np.load(f'maps/{"leicht"}/map ({key}).npy')
-        draw_mini_map(map, 30, pos_y)
-        maps.append(Maps(30, pos_y, 585, 270, key, "leicht"))
+    for key in easy:
+        map = np.load(f'maps/{"easy"}/map ({key}).npy')
+        draw_mini_map(WINDOW, field_mini, way_mini, map, 30, pos_y)
+        maps.append(Maps(30, pos_y, 585, 270, key, "easy"))
         pos_y += 305
     pos_y = 175
     basic = font_basic.render("Medium", True, (250, 250, 250))
     WINDOW.blit(basic, (950 - (basic.get_width() // 2), 125))
-    for key in mittel:
-        map = np.load(f'maps/{"mittel"}/map ({key}).npy')
-        draw_mini_map(map, 670, pos_y)
-        maps.append(Maps(670, pos_y, 585, 270, key, "mittel"))
+    for key in medium:
+        map = np.load(f'maps/{"medium"}/map ({key}).npy')
+        draw_mini_map(WINDOW, field_mini, way_mini, map, 670, pos_y)
+        maps.append(Maps(670, pos_y, 585, 270, key, "medium"))
         pos_y += 305
     pos_y = 175
     basic = font_basic.render("Hard", True, (250, 250, 250))
     WINDOW.blit(basic, (1600 - (basic.get_width() // 2), 125))
-    for key in schwer:
-        map = np.load(f'maps/{"schwer"}/map ({key}).npy')
-        draw_mini_map(map, 1310, pos_y)
-        maps.append(Maps(1310, pos_y, 585, 270, key, "schwer"))
+    for key in hard:
+        map = np.load(f'maps/{"hard"}/map ({key}).npy')
+        draw_mini_map(WINDOW, field_mini, way_mini, map, 1310, pos_y)
+        maps.append(Maps(1310, pos_y, 585, 270, key, "hard"))
         pos_y += 305
 
 
 def map_selection():
+    """
+
+    When User selects a map its been saved and path is generated, gamestate is changed into the main game loop
+
+    Test:
+        -game state 2 has to be main game loop
+        -every function call must work since there is no error handling
+
+    """
     global pressed, maps, MAP, PATH, game_state, starttime
     state = pygame.mouse.get_pressed()[0]
     if state and not pressed:
         pressed = True
         for m in maps:
             if m.isOver():
-                MAP = GenerateObstacles(np.load(f'maps/{m.difficulty}/map ({m.value}).npy'))
-                PATH = LookAhead([], np.load(f'maps/{m.difficulty}/map ({m.value}).npy'), 0, 0)
+                MAP = generate_obstacles(np.load(f'maps/{m.difficulty}/map ({m.value}).npy'))
+                PATH = look_ahead([], np.load(f'maps/{m.difficulty}/map ({m.value}).npy'), 0, 0)
                 game_state = 2
                 load_buttons()
-                create_movement()
-                CreationMapObjects()
+                create_movement(PATH, enemys)
+                creation_map_objects()
                 starttime = time.time()
     elif not state:
         pressed = False
 
 
 def draw_endscreen():
-    global maps, WINDOW
+    """
 
-    WINDOW.fill((192, 192, 192))
+    Draws the Game Over screen
+
+    """
+    global WINDOW, endscreenButtons
+
+    WINDOW.blit(background, (0, 0))
     GameOverText = pygame.font.SysFont('comicsans', 100, True, True).render("Game Over", True, (0, 0, 0))
-    WINDOW.blit(GameOverText, (960-GameOverText.get_width()//2, 540-GameOverText.get_height()//2))
+    WINDOW.blit(GameOverText, (960 - GameOverText.get_width() // 2, 540 - GameOverText.get_height() // 2))
 
     if endscreenButtons == []:
-        endscreenButtons.append(Button((255,0,0), 960 -50, 640, 100, 100 , pygame.transform.scale(start_map, (100, 100))))
+        endscreenButtons.append(
+            Button((255, 0, 0), 960 - 50, 640, 100, 100, pygame.transform.scale(start_map, (100, 100))))
     for btn in endscreenButtons:
         btn.draw(WINDOW)
 
 
 def display_endscreen():
-    global pressed, MAP, PATH, game_state, starttime
+    """
+
+    When Game is Over, restart or end game
+
+    """
+    global pressed
 
     draw_endscreen()
     state = pygame.mouse.get_pressed()[0]
@@ -573,32 +491,31 @@ def display_endscreen():
         for btn in endscreenButtons:
             if btn.isOver():
                 ReInit()
-                draw_menue()
-                game_state = 3
+
+
     elif not state:
         pressed = False
 
 
-def drawTowerRange():
-    for t in towerfields:
-        if t.isOver():
-            t.showRange(WINDOW)
-
-
-
 def ReInit():
-    global Gold, WINDOW, MAP, PATH, starttime, frames, game_state, pressed, maps, wayfields, towerfields, buttons, endscreenButtons, sideinfo, running, enemy_path, selectedEnemy, selectedTowerToBuild, selectedPosition, towerplace_bool, UserHealth
+    """
+
+    Resets all Game Values which have changed during game loop
+
+    Test:
+        -Values have to be the same as at the beginning
+        -Only Call when Restart not during gaming
+    """
+    global Gold, MAP, PATH, starttime, frames, game_state, pressed, maps, wayfields, towerfields, buttons, endscreenButtons, sideinfo, running, enemy_path, selectedEnemy, selectedTowerToBuild, selectedPosition, towerplace_bool, UserHealth, wave, offset, enemys, spawn_offset
 
     # Player Values
     Gold = 1000
     UserHealth = 100
 
     # Game Values
-    WINDOW = pygame.display.set_mode((1920, 1080), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
     MAP = None
     PATH = None
     starttime = None
-    # FPS = 120
     frames = 0
     game_state = 0
     pressed = False
@@ -613,31 +530,22 @@ def ReInit():
     selectedTowerToBuild = None
     selectedPosition = None
     towerplace_bool = False
-
-
-def allTowerShootes():
-    global towerfields, frames
-
-    if frames%10 == 0:
-        for t in towerfields:
-            # hier nur wenn Tower (!= NONE)
-            if t.getValue() != None:
-                bulletValue = t.getValue()%10 - 1
-                print("hier")
-                print(bulletValue)
-                t.findEnemys(enemys, bullet_image[bulletValue])
-
-
-    for t in towerfields:
-        towerBullets = t.getTowerLst()
-        if towerBullets != None and towerBullets != []:
-            for e in enemys:
-                if e.image != None:
-                    e.checkCollide(towerBullets)
-
+    offset = 0
+    wave = 0
+    enemys = []
+    spawn_offset = []
 
 
 def display_state():
+    """
+
+    Switch for different game states
+    Game state 2 is Main game loop
+
+    Test:
+        -Drawing of objects have to be ground up care about correct sequence
+        -Test for enough frames per second
+    """
     global frames, Gold, game_state, WINDOW, pressed
 
     if game_state == 0:
@@ -650,33 +558,31 @@ def display_state():
     elif game_state == 2:
         upgrade_Listener()
         handle_input()
-        draw_window()
-        DrawMap()
+        draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, starttime, Gold)
+        draw_map(WINDOW, wayfields, towerfields)
         on_action()
         draw_enemys()
-        allTowerShootes()
+        draw_tower_bullets(frames, towerfields, enemys, bullet_image)
         frames += 1
         Gold += 0.8
         if UserHealth <= 0:
             game_state = 3
-        drawTowerRange()
+        draw_tower_range(WINDOW, towerfields)
     elif game_state == 3:
         display_endscreen()
     else:
         pass
 
 
-
-
-startup()
-#clock = pygame.time.Clock()
-print(PATH)
-while running:
-    #clock.tick(FPS)
-    #time.sleep(0.0666)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    display_state()
-    pygame.display.update()
-pygame.quit()
+# Main Loop to call States with 60fps and update the pygame window
+if __name__ == "__main__":
+    startup()
+    clock = pygame.time.Clock()
+    while running:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        display_state()
+        pygame.display.update()
+    pygame.quit()
