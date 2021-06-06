@@ -15,6 +15,9 @@ towerGround = pygame.image.load("assets/tower/towerStart2.png")
 towerGround = pygame.transform.scale(towerGround, (140, 140))
 bullet = pygame.image.load("assets/bullet/bullet 1.png")
 
+logo = pygame.image.load("assets/icon.png")
+logo = pygame.transform.scale(logo, (400,400))
+
 # Tower placement in corners of 1920x1080 screen:
 tower_lst = []
 tower_lst.append(
@@ -52,10 +55,9 @@ def LoadMainScreen(win):
     font = pygame.font.SysFont('comicsans', 20)
     font_headline = pygame.font.SysFont('comicsans', 80, True, True)
     win.blit(background, (0, 0))
-    headline = font_headline.render("Tower Defense", True, (250, 250, 250))
-    win.blit(headline, (960 - (headline.get_width() // 2), 150))
-    btn1 = Button((255, 0, 0), x=(960 - button1.get_width()//2), y=400, width=300, height=300, image=button1, name="Spiel starten")
-    btn2 = Button((255, 0, 0), x=(960 - button2.get_width()//2), y=400, width=300, height=300, image=button2, name="Spiel starten")
+    win.blit(logo, (960 - (logo.get_width() // 2), 70))
+    btn1 = Button((255, 0, 0), x=(960 - button1.get_width()//2), y=400, width=300, height=300, image=button1, name="game start")
+    btn2 = Button((255, 0, 0), x=(960 - button2.get_width()//2), y=400, width=300, height=300, image=button2, name="game start")
     btn_rect = pygame.Rect(btn1.x, btn1.y, btn1.width, btn1.height)
     pos = pygame.mouse.get_pos()
 

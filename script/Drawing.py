@@ -105,7 +105,7 @@ def draw_tower_range(WINDOW, towerfields):
         if t.isOver():
             t.showRange(WINDOW)
 
-def draw_tower_bullets(frames, towerfields, enemys, bullet_image):
+def draw_tower_bullets(frames, towerfields, enemys, bullet_image, sound):
     """
     Draws tower bullets, check for collide with enemys or window frame limits
 
@@ -120,7 +120,7 @@ def draw_tower_bullets(frames, towerfields, enemys, bullet_image):
         for t in towerfields:
             if t.getValue() != None:
                 bulletValue = t.getValue()%10 - 1
-                t.findEnemys(enemys, bullet_image[bulletValue])
+                t.findEnemys(enemys, bullet_image[bulletValue], sound)
 
     for t in towerfields:
         towerBullets = t.getTowerLst()

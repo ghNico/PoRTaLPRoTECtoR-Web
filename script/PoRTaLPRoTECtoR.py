@@ -54,6 +54,10 @@ way_mini = pygame.image.load("assets/mini_map/way_field.png")
 background = pygame.image.load("assets/environment/Galaxy.jpg")
 background = pygame.transform.scale(background, (1920, 1080))
 
+# Sound:
+shootSound = None
+backgroundMusic = None
+
 # Bullets:
 bullet_image = [0 for x in range(8)]
 for x in range(1, 9):
@@ -86,8 +90,13 @@ def startup():
     Initialization of pygame
 
     """
-    global WINDOW, font, font_headline, font_basic
+    global WINDOW, font, font_headline, font_basic, shootSound, backgroundMusic
     pygame.init()
+    shootSound = pygame.mixer.Sound("assets/sounds/pew.wav")
+    shootSound.set_volume(0.05)
+    pygame.mixer.music.load("assets/sounds/music.mp3")
+    pygame.mixer.music.set_volume(0.02)
+    pygame.mixer.music.play(-1)
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
     pygame.display.set_caption("Tower Defense")
     pygame.display.set_icon(pygame.image.load('icon.png'))
@@ -251,12 +260,12 @@ def upgrade_Listener():
                                     "Upgrade", "UpgradeTower.name", "UpgradeTower.description", "UpgradeTower.spm")
         else:
             sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)),
-                                    pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
-                                    "nothing to upgrade", "", "", "", "")
+                                    pygame.transform.scale(tower_image2[1][0], (0, 0)), "",
+                                    "nothing to upgrade", "", "", "")
     else:
         sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)),
-                                pygame.transform.scale(tower_image2[1][0], (0, 0)), "Upgrades",
-                                "nothing selected", "", "", "test", "")
+                                pygame.transform.scale(tower_image2[1][0], (0, 0)), "",
+                                "nothing selected", "", "", "")
 
 
 
@@ -549,7 +558,7 @@ def display_state():
     global frames, Gold, game_state, WINDOW, pressed
 
     if game_state == 0:
-        game_state = LoadMainScreen(win=WINDOW)
+        game_state = LoadMainScreen(win=WINDOW, sound= shootSound)
         if game_state == 1:
             pressed = True
             draw_menue()
@@ -562,7 +571,7 @@ def display_state():
         draw_map(WINDOW, wayfields, towerfields)
         on_action()
         draw_enemys()
-        draw_tower_bullets(frames, towerfields, enemys, bullet_image)
+        draw_tower_bullets(frames, towerfields, enemys, bullet_image, shootSound)
         frames += 1
         Gold += 0.8
         if UserHealth <= 0:

@@ -3,11 +3,17 @@ from Bullet import *
 
 allBullets = []
 
-"""
-    Quelle:
-        https://python-code-snippet.blogspot.com/2021/03/how-to-rotate-image-in-pygame.html
-"""
+
 def PerfectRotated(x, y, image, angle):
+    """
+    Rotates the given image by angle and corrects the offset
+
+    Arguments: position, image, angle to rotate
+
+    Returns: rotated picture and the new rect
+
+    Source: https://python-code-snippet.blogspot.com/2021/03/Rotate-Image-In-PyGame.html
+    """
     picture_rotated = pygame.transform.rotozoom(image, angle, 1)
     picture_rotated_rect = picture_rotated.get_rect(center=(x, y))
     return picture_rotated, picture_rotated_rect
@@ -50,6 +56,10 @@ class Tiles:
 
 
 class Button(Tiles):
+    """
+    Button class for all buttons, like the close-button
+    During object creation it needs a color, position, width, height and the image also a name is possible
+    """
     def __init__(self, color, x, y, width, height, image=None, name=''):
         super().__init__(x, y, width, height, image)
         self.color = color
@@ -57,15 +67,17 @@ class Button(Tiles):
         self.rect = pygame.Rect(x, y, width, height)
 
     def draw(self, win):
-        # Call this method to draw the button on the screen
-        #pygame.draw.rect(win, self.color, self.rect, 0)
+        """
+        Draws the image of the button object (if it is not None)
+
+        Arguments: pygame window
+
+        Test:
+            -check if all images are drawn
+
+        """
         if self.image != '':
             win.blit(self.image, (self.x, self.y))
-        #if self.name != '':
-            #font = pygame.font.SysFont('comicsans', 20)
-            #name = font.render(self.name, True, (0, 0, 0))
-            #win.blit(name, (
-                #self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height / 2 - name.get_height() / 2)))
 
 
 
@@ -81,6 +93,16 @@ class Enemy(Tiles):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def draw(self, win):
+        """
+        Draws the image and the healthbar of the enemy object (if it is not None)
+        The healthbar contains the actualHealth and the MaxHealth of the enemy
+
+        Arguments: pygame window
+
+        Test:
+            -check if all images are drawn
+            -check if the healthbar is shown correctly
+        """
         if self.image != None:
             win.blit(self.images[self.direction], (self.x, self.y))
             actualHealth = (self.health/self.maxHealth)*100
@@ -88,6 +110,15 @@ class Enemy(Tiles):
             pygame.draw.rect(win, (0, 255, 0), (self.x+20, self.y-20, actualHealth, 15))
 
     def rotate(self, direction):
+        """
+        In order to rotate the enemy we have 4 states top, down, left and right.
+        The enemy has to manipulate his image based on rotation state so if he rotate in a corner on map (direction ==1)
+        The next Image has to be selected so we increase the objects direction variable which is been used
+        to select the displayed image on the pygame window
+
+        Arguments: direction where the enemy moves
+
+        """
         if direction == 1:
             if self.direction == 3:
                 self.direction = 0
@@ -100,6 +131,16 @@ class Enemy(Tiles):
                 self.direction -= 1
 
     def getDamage(self, damage):
+        """
+        Changes the enemy's health when hit by a tower bullet. The damage is variable, so each tower has a different damage.
+        After the health is changed it checks if the enemy is dead (health <=0). If this is true the image of it will be set to none and also health and maxHealth is set to 0.
+
+        Arguments: damage which is applied to the enemy
+
+        Test:
+            -check if damage is the same as the damage which is set at the tower class
+            -check if image of enemy always gets set to none
+        """
         self.health -= damage
         if self.health<=0:
             self.image = None
@@ -110,8 +151,18 @@ class Enemy(Tiles):
 
     def checkCollide(self, towerBullets):
         global allBullets
+        """
+        Iterates over the list of all currently spawned bullets and checks if one of those bullets collided with the current enemy. 
+        If they collide with the enemy, the function getDamage get triggered with the damage of the bullet. 
+        After that the bullet gets destroyed.
 
-        # Check auf Bullet versuchen
+        Arguments: list of all towerBullets
+
+        Test:
+            -check if collide works
+            -check if the right damage gets applied to the enemy and if the bullet gets deleted after that
+            
+        """
         if towerBullets != None:
             for b in towerBullets:
                 if self.rect.colliderect(b.rect):
@@ -121,11 +172,22 @@ class Enemy(Tiles):
                     pass
 
     def updateRect(self):
+        """
+        Updates the position and the width/height of the rect of the enemy.
+
+        Test:
+            -check if rect changes the right way
+            -check if the rect moves correctly with enemy
+        """
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
 
 
 class Maps(Tiles):
+    """
+    Maps class for selecting maps
+    During object creation it needs position, width, height, value, difficulty, image (default no image)
+    """
     def __init__(self, x, y, width, height, value, difficulty, image=None):
         super().__init__(x, y, width, height, image)
         self.value = value
@@ -134,6 +196,10 @@ class Maps(Tiles):
 
 
 class Tower(Tiles):
+    """
+    Tower class for all Tower placed on the map
+    During object creation it needs position, width, height, 2 images (ground & rotated Tower), Range, damage, value, costs and a boolean which checks if the Range should be shown
+    """
     def __init__(self, x, y, width, height, image1, image2, towerRange, damage, value, costs=0, ShowRangeBoolean=False):
         super().__init__(x, y, width, height, image1)
         self.costs = costs
@@ -147,6 +213,17 @@ class Tower(Tiles):
         self.TowerBullets = []
 
     def draw(self, win):
+        """
+        Draws the image of the ground of the tower (image) after that it draws the rotated Tower on top of it.
+        It also controls the bullets of its list of bullets.
+
+        Arguments: pygame window
+
+        Test:
+            -check if all images are drawn
+            -check if the bullet trajectory is created right
+        """
+
         win.blit(self.image, (self.x, self.y))
 
         image_rotated, image_rotated_rect = PerfectRotated(self.x+self.width//2, self.y+self.height//2, self.image2, self.angle)
@@ -170,14 +247,22 @@ class Tower(Tiles):
         return self
 
     def showRange(self, win):
-        # Surface((width, height), flags=0, depth=0, masks=None)
+        """
+        Transparent overlay for range indicator
+
+        Arguments: pygame window
+
+        Test:
+            -resolution of pygame window matches the surface resolution
+
+        """
         Range = pygame.Surface((1920, 1080), pygame.SRCALPHA, 32)
-        # circle(surface, color, center, radius, width=0, draw_top_right=None, draw_top_left=None, draw_bottom_left=None, draw_bottom_right=None)
         pygame.draw.circle(Range, (255,0, 0, 80), (self.x+self.width//2, self.y+self.height//2), self.towerRange)
         win.blit(Range, (0,0))
 
     def spawnBullet(self, aimPosX, aimPosY, image):
         tempObject = Bullet(self.x, self.y, 50, 50, image, self.damage, aimPosX, aimPosY)
+        sound.play()
         self.TowerBullets.append(tempObject)
         allBullets.append(tempObject)
 
@@ -234,7 +319,7 @@ class Tower(Tiles):
                 enemyX = nearestEnemy.x + e.width // 2 + additionX * 10
                 enemyY = nearestEnemy.y + e.height // 2 + additionY * 10
                 self.rotate(enemyX, enemyY)
-                self.spawnBullet(enemyX, enemyY, pygame.transform.rotate(image, self.angle))
+                self.spawnBullet(enemyX, enemyY, pygame.transform.rotate(image, self.angle), sound)
 
 
 
