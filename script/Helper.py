@@ -33,7 +33,7 @@ def enemy_rotation(current_pos):
 
     Test:
         -check if the position is in the format needed for conversion
-        -
+        -error handling when no current position
 
     """
     if current_pos == 'up':
@@ -46,7 +46,7 @@ def enemy_rotation(current_pos):
         return 2
 
 
-def look_ahead(way, map, pos_x, pos_y):
+def build_path(way, map, pos_x, pos_y):
     """
     Recursive function to build the path of a given map
 
@@ -62,16 +62,16 @@ def look_ahead(way, map, pos_x, pos_y):
     map[pos_y, pos_x] = 0
     if pos_x < 12 and map[pos_y, pos_x + 1] == 8:
         way.append(("right", pos_x + 1, pos_y))
-        look_ahead(way, map, pos_x + 1, pos_y)
+        build_path(way, map, pos_x + 1, pos_y)
     elif pos_x > 0 and map[pos_y, pos_x - 1] == 8:
         way.append(("left", pos_x - 1, pos_y))
-        look_ahead(way, map, pos_x - 1, pos_y)
+        build_path(way, map, pos_x - 1, pos_y)
     elif pos_y > 0 and map[pos_y - 1, pos_x] == 8:
         way.append(("up", pos_x, pos_y - 1))
-        look_ahead(way, map, pos_x, pos_y - 1)
+        build_path(way, map, pos_x, pos_y - 1)
     elif pos_y < 5 and map[pos_y + 1, pos_x] == 8:
         way.append(("down", pos_x, pos_y + 1))
-        look_ahead(way, map, pos_x, pos_y + 1)
+        build_path(way, map, pos_x, pos_y + 1)
     elif pos_x < 12 and map[pos_y, pos_x + 1] == 2:
         way.append(("right", pos_x + 1, pos_y))
     elif pos_x > 0 and map[pos_y, pos_x - 1] == 2:

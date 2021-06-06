@@ -24,7 +24,7 @@ def startMap():
     return np.zeros((heigth, width), dtype='int8')
 
 
-def availableWays(map, mx, my, condition):  # Hier wird geprüft ob oben, unten, links, oder rechts die Bedingung gilt
+def availableWays(map, mx, my, condition):
     """
 
     Arguments: map, position, condition

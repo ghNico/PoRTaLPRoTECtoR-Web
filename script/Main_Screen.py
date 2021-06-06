@@ -37,14 +37,14 @@ tower_lst.append(
 AimX = 0
 AimY = 0
 
-def LoadMainScreen(win):
+def LoadMainScreen(win, sound):
     """
-    Draws the launch screen at the startup, tower animation and mouse follow, shoot animation, and start of game when pressing the start button
+    Draws the launch screen at the startup, tower animation and mouse follow, shoot animation, and start game when pressing the start button
 
     Arguments: pygame window
 
     Test:
-        -return values need to be same as the gamestate in MapLogic.py
+        -return values need to be same as the gamestate in PoRTaLPRoTECtoR.py
         -collide of bullets are needed for game startup so the draw function has to work properly
 
     Returns: gamestate 0 or 1 if start is pressed and the bullets collide with the button
@@ -83,7 +83,7 @@ def LoadMainScreen(win):
     state = pygame.mouse.get_pressed()[0]
     if state and not pressed:
         for t in tower_lst:
-                t.spawnBullet(pos[0], pos[1], pygame.transform.rotate(bullet, t.angle))
+                t.spawnBullet(pos[0], pos[1], pygame.transform.rotate(bullet, t.angle), sound)
                 AimX = pos[0]
                 AimY = pos[1]
                 t.draw(win)

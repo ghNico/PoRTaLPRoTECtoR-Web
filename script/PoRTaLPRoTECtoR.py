@@ -1,9 +1,19 @@
+"""
+PoRTaLPRoTECtoR
+Infinite Tower Defense Game
+Attributes:
+    Author: Niclas Hörber (NiclasHoerber) and Nico Fischer (ghNico)
+    Version: 1.0.0
+    license: free but tell us about your usage so we know under niroma2000@gmail.com
+    Available via Github: https://github.com/NiclasHoerber/PoRTaLPRoTECtoR
+"""
 from Tiles import *
 from Main_Screen import LoadMainScreen
 from Drawing import *
 from Helper import *
 import numpy as np
 import time
+from loguru import logger
 
 # Player Values
 Gold = 1000
@@ -39,6 +49,8 @@ font_headline = None
 font_basic = None
 
 # Textures:
+restart = pygame.transform.scale(pygame.image.load("assets/environment/restart.jpg"),(140,140))
+exitimage = pygame.transform.scale(pygame.image.load("assets/environment/exit.jpg"),(140,140))
 start_map = pygame.transform.scale(pygame.image.load('assets/environment/portal.jpg'), (140, 140))
 end_map = pygame.transform.scale(pygame.image.load('assets/environment/portal_red.jpg'), (140, 140))
 way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.JPG"), (140, 140))
@@ -98,8 +110,8 @@ def startup():
     pygame.mixer.music.set_volume(0.02)
     pygame.mixer.music.play(-1)
     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
-    pygame.display.set_caption("Tower Defense")
-    pygame.display.set_icon(pygame.image.load('icon.png'))
+    pygame.display.set_caption("PoRTaL PRoTECtoR")
+    pygame.display.set_icon(pygame.image.load('assets/icon.png'))
     font = pygame.font.SysFont('comicsans', 20)
     font_headline = pygame.font.SysFont('comicsans', 50, True, True)
     font_basic = pygame.font.SysFont('comicsans', 30, True)
@@ -116,39 +128,39 @@ def load_buttons():
     """
     global buttons
     buttons.append(
-        Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(start_map, (50, 50)), "Spiel beenden"))
+        Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(exitimage, (50, 50)), "game stop"))
     buttons.append(
         Informations(x=260, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][0], (140, 140)),
-                     image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=450, towerRange=200,
-                     damage=30, value=11, headline="Headline", name="Tower 1", description="Description"))
+                     image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=250, towerRange=200,
+                     damage=30, value=11, headline="Ice Boy", name="Tower 1", description="Out of the Iceage"))
     buttons.append(
         Informations(x=440, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][1], (140, 140)),
-                     image2=pygame.transform.scale(tower_image2[0][1], (140, 140)), costs=550, towerRange=300, damage=5,
-                     value=12, headline="Headline", name="Tower 2", description="Description"))
+                     image2=pygame.transform.scale(tower_image2[0][1], (140, 140)), costs=300, towerRange=225, damage=35,
+                     value=12, headline="Rocket Inferno", name="Tower 2", description="Iron Dome (Israel)"))
     buttons.append(
         Informations(620, 870, 140, 140, pygame.transform.scale(tower_image[0][2], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][2], (140, 140)), 450, 300, 10, 13, "Headline", "Tower 3",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][2], (140, 140)), 325, 250, 40, 13, "Blaster", "Tower 3",
+                     "Fat Gun"))
     buttons.append(
         Informations(800, 870, 140, 140, pygame.transform.scale(tower_image[0][3], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][3], (140, 140)), 450, 210, 10, 14, "Headline", "Tower 4",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][3], (140, 140)), 350, 275, 45, 14, "Red Sparrow", "Tower 4",
+                     "Not a real sparrow"))
     buttons.append(
         Informations(980, 870, 140, 140, pygame.transform.scale(tower_image[0][4], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][4], (140, 140)), 450, 100, 10, 15, "Headline", "Tower 5",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][4], (140, 140)), 375, 300, 50, 15, "Alfi Deluxe", "Tower 5",
+                     "mit 1.0 bestanden ;)"))
     buttons.append(
         Informations(1160, 870, 140, 140, pygame.transform.scale(tower_image[0][5], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][5], (140, 140)), 450, 100, 80, 16, "Headline", "Tower 6",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][5], (140, 140)), 400, 325, 55, 16, "Mega Blizzard", "Tower 6",
+                     "Really Cold"))
     buttons.append(
         Informations(1340, 870, 140, 140, pygame.transform.scale(tower_image[0][6], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][6], (140, 140)), 450, 100, 80, 17, "Headline", "Tower 7",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][6], (140, 140)), 425, 350, 60, 17, "Yellow Trinket", "Tower 7",
+                     "Gives no Vision"))
     buttons.append(
         Informations(1520, 870, 140, 140, pygame.transform.scale(tower_image[0][7], (140, 140)),
-                     pygame.transform.scale(tower_image2[0][7], (140, 140)), 450, 100, 80, 18, "Headline", "Tower 8",
-                     "Description", "schaden"))
+                     pygame.transform.scale(tower_image2[0][7], (140, 140)), 450, 375, 65, 18, "RIGHT Tower", "Tower 8",
+                     "Not Left"))
 
 
 def on_action():
@@ -176,6 +188,7 @@ def on_action():
             if MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
                 if Gold >= int(sideinfo.costs):
                     MAP[(selectedPosition.y // 140, (selectedPosition.x - 50) // 140)] += 10
+                    logger.info("Towerupgrade")
                     selectedPosition.upgrade(tower_image, tower_image2)
                     Gold -= int(sideinfo.costs)
                 selectedTowerToBuild = None
@@ -200,8 +213,9 @@ def handle_input():
     global running, selectedTowerToBuild, selectedPosition, MAP, Gold
 
     if selectedTowerToBuild is not None and selectedPosition is None:
-        if selectedTowerToBuild.name == "Spiel beenden":
+        if selectedTowerToBuild.name == "game stop":
             running = False
+            logger.info("End Game")
             selectedTowerToBuild = None
             selectedPosition = None
     elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[
@@ -217,6 +231,7 @@ def handle_input():
                                                selectedTowerToBuild.image2, selectedTowerToBuild.towerRange,
                                                selectedTowerToBuild.damage, value, selectedTowerToBuild.costs)
                 Gold -= int(selectedTowerToBuild.costs)
+                logger.info(f"Tower build {selectedTowerToBuild.name}")
             selectedTowerToBuild = None
             selectedPosition = None
     elif selectedTowerToBuild is not None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] != 0 or selectedTowerToBuild is None and selectedPosition is not None and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] == 0:
@@ -245,7 +260,7 @@ def upgrade_Listener():
                                     selectedTowerToBuild.costs, selectedTowerToBuild.towerRange,
                                     selectedTowerToBuild.damage, selectedTowerToBuild.value,
                                     selectedTowerToBuild.headline, selectedTowerToBuild.name,
-                                    selectedTowerToBuild.description, selectedTowerToBuild.spm)
+                                    selectedTowerToBuild.description)
     elif selectedTowerToBuild is None and selectedPosition is not None:
         nextstage = MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] + 10
         if 20 < nextstage < 40:
@@ -257,7 +272,7 @@ def upgrade_Listener():
                                     pygame.transform.scale(UpgradeTower.image2, (80, 80)),
                                     UpgradeTower.costs, UpgradeTower.towerRange - selectedPosition.towerRange,
                                     UpgradeTower.damage - selectedPosition.damage, UpgradeTower.value,
-                                    "Upgrade", "UpgradeTower.name", "UpgradeTower.description", "UpgradeTower.spm")
+                                    "Upgrade", "UpgradeTower.name", "UpgradeTower.description")
         else:
             sideinfo = Informations(80, 900, 100, 100, pygame.transform.scale(tower_image[1][0], (0, 0)),
                                     pygame.transform.scale(tower_image2[1][0], (0, 0)), "",
@@ -381,6 +396,7 @@ def draw_enemys():
     if len(enemys) == 0:
         frames = 0
         wave += 1
+        logger.info(f"Current wave is {wave}")
         picture = pygame.transform.scale(pygame.image.load(f"assets/enemys/destroyer ({2 - (wave % 2)}).png"),
                                          (140, 140))
         offset = 0
@@ -402,7 +418,7 @@ def draw_menue():
 
     Test:
         -The maps have to be generated with mapgen.py
-        - maps must have 6x13 format and resolution 1920x1080
+        -maps must have 6x13 format and resolution 1920x1080
 
     """
     global maps, WINDOW, font_headline, font_basic
@@ -455,8 +471,10 @@ def map_selection():
         pressed = True
         for m in maps:
             if m.isOver():
+                logger.add("file.log", level="DEBUG")
+                logger.info(f"Map selected {m.difficulty} {m.value}")
                 MAP = generate_obstacles(np.load(f'maps/{m.difficulty}/map ({m.value}).npy'))
-                PATH = look_ahead([], np.load(f'maps/{m.difficulty}/map ({m.value}).npy'), 0, 0)
+                PATH = build_path([], np.load(f'maps/{m.difficulty}/map ({m.value}).npy'), 0, 0)
                 game_state = 2
                 load_buttons()
                 create_movement(PATH, enemys)
@@ -480,7 +498,7 @@ def draw_endscreen():
 
     if endscreenButtons == []:
         endscreenButtons.append(
-            Button((255, 0, 0), 960 - 50, 640, 100, 100, pygame.transform.scale(start_map, (100, 100))))
+            Button((255, 0, 0), 960 - 50, 640, 100, 100, restart))
     for btn in endscreenButtons:
         btn.draw(WINDOW)
 
@@ -499,6 +517,7 @@ def display_endscreen():
         pressed = True
         for btn in endscreenButtons:
             if btn.isOver():
+                logger.info("New Game")
                 ReInit()
 
 

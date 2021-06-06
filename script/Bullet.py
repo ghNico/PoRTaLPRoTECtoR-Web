@@ -15,7 +15,7 @@ class Bullet:
         self.aimPosY = aimPosY
         self.damage = damage
         self.path = []
-        self.positionMarker = 1 #Auf eins, dass der schuss nicht hinter der Kanone anfängt
+        self.positionMarker = 1
         self.speed = 1
         self.rect = pygame.Rect(self.x, self.y, self.width*1.5, self.height*1.5)
 
@@ -32,12 +32,19 @@ class Bullet:
         win.blit(self.image, (self.x, self.y))
 
     def trajectoryCreation(self):
+        """
+        Creates a path for the bullet movement towards the enemy (aimPosition)
 
-        #60 Frames
+        Arguments: pygame window
+
+        Test:
+            -correct path that will hit the enemy
+            -check if it is a fluent movement (enough steps till enemy)
+        """
         stepX = -(self.x - self.aimPosX)
         stepY = -(self.y - self.aimPosY)
 
-        for i in range(0, round(10/ self.speed)):
+        for i in range(0, round(10 / self.speed)):
             self.path.append((stepX * (i / round(10/self.speed)), stepY * (i / round(10/self.speed))))
 
     def move(self, win):

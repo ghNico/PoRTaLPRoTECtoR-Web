@@ -20,6 +20,10 @@ def PerfectRotated(x, y, image, angle):
 
 
 class Tiles:
+    """
+    Tiles class for objects needed in game
+    During object creation it needs a position, width, height and the image which will displayed on the pygame windows
+    """
     def __init__(self, x, y, width, height, image):
         self.x = x
         self.y = y
@@ -28,7 +32,16 @@ class Tiles:
         self.image = image
 
     def isOver(self):
-        # Pos is the mouse position or a tuple of (x,y) coordinates
+        """
+        Check if the mouse is over an object
+
+        Returns: Boolean if the mouse is over an object
+
+        Test:
+            -check if the function always detects if the mouse is over the button
+            -check if return is always correct
+
+        """
         pos = pygame.mouse.get_pos()
         if self.x < pos[0] < self.x + self.width:
             if self.y < pos[1] < self.y + self.height:
@@ -38,7 +51,7 @@ class Tiles:
     def draw(self, win):
         win.blit(self.image, (self.x, self.y))
 
-    # Hier bitte noch andere Lösung finden
+
     def showRange(self, win):
         pass
 
@@ -82,6 +95,10 @@ class Button(Tiles):
 
 
 class Enemy(Tiles):
+    """
+    Enemy class for all enemys
+    During object creation it needs position, width, height, health, maxhealth, velocity, direction, images, and the path
+    """
     def __init__(self, x, y, width, height, health, maxHealth, velocity, direction, images, path):
         super().__init__(x, y, width, height, images)
         self.health = health
@@ -234,12 +251,19 @@ class Tower(Tiles):
             b.move(win)
 
     def upgrade(self, tower_image, tower_image2):
+        """
+        Upgrade of Tower is calculated and set
+
+        Arguments: old Tower image, new Tower image
+
+        Test:
+            -new calculated Tower is balanced for the game
+
+        """
         self.value += 10
         self.costs = int(int(self.costs)*(1.5))
         self.damage = int(int(self.damage)*(1.5))
         self.towerRange = int(int(self.towerRange)*(1.2))
-        # Bilder:
-        # -------
         first_place = (self.value % 10)-1
         second_place = (self.value // 10) - 1
         self.image = pygame.transform.scale(tower_image[second_place][first_place], (140, 140))
@@ -260,14 +284,33 @@ class Tower(Tiles):
         pygame.draw.circle(Range, (255,0, 0, 80), (self.x+self.width//2, self.y+self.height//2), self.towerRange)
         win.blit(Range, (0,0))
 
-    def spawnBullet(self, aimPosX, aimPosY, image):
+    def spawnBullet(self, aimPosX, aimPosY, image, sound):
+        """
+        Create bullet object and append it to render queue
+
+        Arguments: aim position and bullet image and sound
+
+        Test:
+            -Bullet image size 50x50
+
+        """
+
         tempObject = Bullet(self.x, self.y, 50, 50, image, self.damage, aimPosX, aimPosY)
         sound.play()
         self.TowerBullets.append(tempObject)
         allBullets.append(tempObject)
 
-    # For Rotate
     def rotate(self, aimX, aimY):
+        """
+        Rotates the tower around itself so the angle of tower is changed (Rotate to the Enemy/Aim)
+
+        Arguments: aim position
+
+        Test:
+            -correct angle calculation
+            -handling zerodivisionerror
+
+        """
         try:
             angle2 = math.degrees(math.atan((self.y - aimY) / (self.x - aimX)))
         except ZeroDivisionError:
@@ -281,9 +324,16 @@ class Tower(Tiles):
         angle2 = 0 - angle2
         self.angle = angle2
 
-    def findEnemys(self, enemy_lst, image):
+    def findEnemys(self, enemy_lst, image, sound):
+        """
+        Tower search enemy + some math for positioning and the according bullet is spawned to kill the enemy
 
-        # Hier sucht den nähesten Gegner:
+        Arguments: list of enemys and the bullet image and sound of shooting
+
+        Test:
+            -check if always find the nearest enemy
+            -check if the position of nearest enemy is right (important for rotation and spawn bullet)
+        """
         nearestEnemy = None
         lowestDistance = 0
         for e in enemy_lst:
@@ -297,22 +347,17 @@ class Tower(Tiles):
                     nearestEnemy = e
 
         if nearestEnemy != None:
-            # Check ob enemy noch am Leben ist
             if nearestEnemy.image != None:
                 if nearestEnemy.direction == 1:
-                    # Nach oben
                     additionX = 0
                     additionY = 1
                 elif nearestEnemy.direction == 3:
-                    # Nach unten
                     additionX = 0
                     additionY = -1
                 elif nearestEnemy.direction == 0:
-                    # Nach rechts
                     additionX = 1
                     additionY = 0
                 elif nearestEnemy.direction == 2:
-                    # Nach unten
                     additionX = -1
                     additionY = 0
 
@@ -331,15 +376,28 @@ class Tower(Tiles):
 
 
 class Informations(Tower):
-    def __init__(self, x, y, width, height, image, image2, costs, towerRange, damage, value, headline='', name='', description='', spm=''):
+    """
+    Informations class is used to store and hold the tower selection in the lower center of the screen
+
+    Based on Tower object based on Tiles object
+    """
+    def __init__(self, x, y, width, height, image, image2, costs, towerRange, damage, value, headline='', name='', description=''):
         super().__init__(x, y, width, height, image, image2, towerRange, damage, value, costs)
         self.headline = headline
         self.name = name
         self.description = description
-        self.spm = spm
         self.rect = pygame.Rect(x, y, width, height)
 
     def draw(self, win):
+        """
+        Draws the object with all information below and a headline
+
+        Arguments: pygame window
+
+        Test:
+            -resolution of pygame window 1920x1080
+            -correct display of text on screen
+        """
         win.blit(self.image, (self.x, self.y))
         win.blit(self.image2, (self.x, self.y))
         font = pygame.font.SysFont('comicsans', 20)

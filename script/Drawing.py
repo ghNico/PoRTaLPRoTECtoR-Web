@@ -9,7 +9,7 @@ def draw_buttons(WINDOW,sideinfo, buttons):
 
     Test:
         -check if the objects have a draw function
-        -
+        -check if sideinfo is shown correctly
 
     """
     for k in buttons:
