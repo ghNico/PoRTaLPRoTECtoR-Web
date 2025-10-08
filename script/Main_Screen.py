@@ -44,7 +44,7 @@ def LoadMainScreen(win, sound):
     Arguments: pygame window
 
     Test:
-        -return values need to be same as the gamestate in PoRTaLPRoTECtoR.py
+        -return values need to be same as the gamestate in main.py
         -collide of bullets are needed for game startup so the draw function has to work properly
 
     Returns: gamestate 0 or 1 if start is pressed and the bullets collide with the button
