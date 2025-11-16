@@ -1,4 +1,8 @@
 import numpy as np
+
+MAP_OBSTACLE_VALUE = 5
+
+
 def create_movement(PATH, enemys):
     """
     Generate all positions and rotation states of enemys based on their velocity while travelling along the path from start to end.
@@ -132,6 +136,6 @@ def generate_obstacles(map):
                     distance = distance_to_path(map, x, y)
                     value = np.random.randint(0, 100)
                     if distance == 1 and value < 5 or distance == 2 and value < 20 or distance == 3 and value < 50 or distance == 4:
-                        k[y, x] = 5
+                        k[y, x] = MAP_OBSTACLE_VALUE
                         sum_obstacles += 1
     return k

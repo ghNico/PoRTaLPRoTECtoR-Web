@@ -8,6 +8,9 @@ Attributes:
     Available via Github: https://github.com/NiclasHoerber/PoRTaLPRoTECtoR
 """
 import asyncio
+import random
+from idlelib.run import exit_now
+from typing import Any
 
 from Tiles import *
 from Main_Screen import LoadMainScreen
@@ -16,6 +19,13 @@ from Helper import *
 import numpy as np
 import time
 
+SPECIAL_POWER_IMAGE_HEIGHT = 200
+SPECIAL_POWER_IMAGE_WIDTH = 200
+COLLECTED_PRESENTS=0
+MAX_NUMBER_OF_PRESENTS=4
+
+LIKELIHOOD_PRESENT_CREATED = 0.01
+
 # Player Values
 Gold = 1000
 UserHealth = 100
@@ -23,6 +33,8 @@ UserHealth = 100
 # Game Values
 WINDOW = pygame.display.set_mode((1920, 1080));
 MAP = None
+MAP_Y_SIZE=5
+MAP_X_SIZE=12
 PATH = None
 starttime = None
 frames = 0
@@ -32,6 +44,8 @@ maps = []
 wayfields = []
 towerfields = []
 buttons = []
+exit_button:Button
+special_power_button:Button
 endscreenButtons = []
 sideinfo = None
 running = True
@@ -51,13 +65,26 @@ font_basic = None
 
 # Textures:
 restart = pygame.transform.scale(pygame.image.load("assets/environment/restart.jpg"),(140,140))
-exitimage = pygame.transform.scale(pygame.image.load("assets/environment/exit.jpg"),(140,140))
+exit_image = pygame.transform.scale(pygame.image.load("assets/environment/exit.jpg"), (140, 140))
+special_effect_image= pygame.transform.scale(pygame.image.load("assets/environment/specialPower/0_presents_special_power.png"), (
+    SPECIAL_POWER_IMAGE_WIDTH, SPECIAL_POWER_IMAGE_HEIGHT))
+special_effect_image1= pygame.transform.scale(pygame.image.load("assets/environment/specialPower/1_presents_special_power.png"), (
+    SPECIAL_POWER_IMAGE_WIDTH, SPECIAL_POWER_IMAGE_HEIGHT))
+special_effect_image2= pygame.transform.scale(pygame.image.load("assets/environment/specialPower/2_presents_special_power.png"), (
+    SPECIAL_POWER_IMAGE_WIDTH, SPECIAL_POWER_IMAGE_HEIGHT))
+special_effect_image3= pygame.transform.scale(pygame.image.load("assets/environment/specialPower/3_presents_special_power.png"), (
+    SPECIAL_POWER_IMAGE_WIDTH, SPECIAL_POWER_IMAGE_HEIGHT))
+special_effect_image4= pygame.transform.scale(pygame.image.load("assets/environment/specialPower/4_presents_special_power.png"), (
+    SPECIAL_POWER_IMAGE_WIDTH, SPECIAL_POWER_IMAGE_HEIGHT))
 start_map = pygame.transform.scale(pygame.image.load('assets/environment/portal.jpg'), (140, 140))
 end_map = pygame.transform.scale(pygame.image.load('assets/environment/portal_red.jpg'), (140, 140))
 way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.JPG"), (140, 140))
 way_vertical = pygame.transform.scale(pygame.transform.rotate(way_horizontal, 90), (140, 140))
 clickable_field = pygame.transform.scale(pygame.image.load('assets/environment/bauen.png'), (140, 140))
 obstacle_map = pygame.transform.scale(pygame.image.load('assets/environment/hindernis.png'), (140, 140))
+christmas_tree_obstacle_map = pygame.transform.scale(pygame.image.load('assets/environment/christmas_tree.png'), (140, 140))
+christmas_wreath_obstacle_map = pygame.transform.scale(pygame.image.load('assets/environment/christmas_wreath.png'), (140, 140))
+present_obstacle_map = pygame.transform.scale(pygame.image.load('assets/environment/present.png'), (140, 140))
 curve1 = pygame.transform.scale(pygame.image.load('assets/tiles/Kurve.JPG'), (140, 140))
 curve2 = pygame.transform.rotate(curve1, 90)
 curve3 = pygame.transform.rotate(curve1, 180)
@@ -128,8 +155,7 @@ def load_buttons():
 
     """
     global buttons
-    buttons.append(
-        Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(exitimage, (50, 50)), "game stop"))
+
     buttons.append(
         Informations(x=260, y=870, width=140, height=140, image=pygame.transform.scale(tower_image[0][0], (140, 140)),
                      image2=pygame.transform.scale(tower_image2[0][0], (140, 140)), costs=250, towerRange=200,
@@ -164,6 +190,19 @@ def load_buttons():
                      "Not Left"))
 
 
+def load_exit_button():
+    global exit_button
+    exit_button=Button((255, 0, 0), 1755, 1000, 50, 50, pygame.transform.scale(exit_image, (50, 50)), "game stop")
+
+
+def load_special_power_button():
+    global special_power_button
+    special_power_button=Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image, (200, 200)), "use special power")
+
+
+
+
+
 def on_action():
     """
 
@@ -194,8 +233,28 @@ def on_action():
                     Gold -= int(sideinfo.costs)
                 selectedTowerToBuild = None
                 selectedPosition = None
+        handle_press_present(towerfields)
+        handle_press_exit_button()
     elif not state:
         pressed = False
+
+def handle_press_present(towerfields):
+    global COLLECTED_PRESENTS
+    for t in towerfields:
+        if t.isOver():
+            selectedPosition = t
+            value = MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140]
+            if value == 7 and MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] < 30:
+                MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] = 0
+                update_map()
+                COLLECTED_PRESENTS += 1
+                update_special_power_button(COLLECTED_PRESENTS)
+
+
+def handle_press_exit_button():
+    global exit_button
+    if exit_button.isOver():
+        display_endscreen()
 
 
 def handle_input():
@@ -317,6 +376,23 @@ def draw_path(path_pos):
         wayfields.append(Tiles(pos_x, pos_y, 140, 140, curve4))
 
 
+def update_map():
+    global towerplace_bool, MAP, towerfields
+    count_ways = 0
+    ty = 0
+    for y in range(6):
+        tx = 0
+        if y > 0:
+            tx = 50
+        for x in range(13):
+            value = MAP[y, x]
+            if value == 0:
+                towerfields.append(Tiles(tx, ty, 140, 140, clickable_field))
+            if value == 7:
+                append_presents(towerfields, tx, ty)
+            tx += 140
+        ty += 140
+    towerplace_bool = True
 
 def creation_map_objects():
     """
@@ -341,7 +417,9 @@ def creation_map_objects():
                 if not towerplace_bool:
                     towerfields.append(Tiles(tx, ty, 140, 140, clickable_field))
             elif value == 5:
-                towerfields.append(Tiles(tx, ty, 140, 140, obstacle_map))
+                append_random_obstacles(towerfields, tx, ty)
+            elif value == 7:
+                append_presents(towerfields, tx, ty)
             elif value == 8:
                 draw_path(count_ways)
                 count_ways += 1
@@ -358,6 +436,18 @@ def creation_map_objects():
         ty += 140
     towerplace_bool = True
 
+
+def append_random_obstacles(towerfields: list[Any], tx: int | Any, ty: int):
+    random_value = random.random()
+    if random_value<0.33:
+        towerfields.append(Tiles(tx, ty, 140, 140, obstacle_map))
+    elif random_value<0.66:
+        towerfields.append(Tiles(tx, ty, 140, 140, christmas_tree_obstacle_map))
+    else:
+        towerfields.append(Tiles(tx, ty, 140, 140, christmas_wreath_obstacle_map))
+
+def append_presents(towerfields, tx, ty):
+    towerfields.append(Tiles(tx, ty, 140, 140, present_obstacle_map))
 
 def draw_enemys():
     """
@@ -412,6 +502,33 @@ def draw_enemys():
 
 
 
+
+
+def draw_present():
+    global MAP, COLLECTED_PRESENTS
+    add_present_zo_map = LIKELIHOOD_PRESENT_CREATED > random.random()
+    if add_present_zo_map and COLLECTED_PRESENTS<MAX_NUMBER_OF_PRESENTS:
+        present_y_coordinate=random.randint(0, MAP_Y_SIZE)
+        present_x_coordinate=random.randint(0, MAP_X_SIZE)
+        if MAP[present_y_coordinate, present_x_coordinate] == 0:
+            MAP[present_y_coordinate, present_x_coordinate] = 7
+            update_map()
+
+
+
+def update_special_power_button(COLLECTED_PRESENTS):
+    global special_power_button
+    if COLLECTED_PRESENTS ==0:
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image1, (200, 200)))
+    elif COLLECTED_PRESENTS ==1:
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image1, (200, 200)))
+    elif COLLECTED_PRESENTS ==2:
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image2, (200, 200)))
+    elif COLLECTED_PRESENTS ==3:
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image3, (200, 200)))
+    elif COLLECTED_PRESENTS ==4:
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image4, (200, 200)))
+
 def draw_menue():
     """
 
@@ -456,6 +573,9 @@ def draw_menue():
         pos_y += 305
 
 
+
+
+
 def map_selection():
     """
 
@@ -478,6 +598,8 @@ def map_selection():
                 PATH = build_path([], np.load(f'maps/{m.difficulty}/map ({m.value}).npz')['data'], 0, 0)
                 game_state = 2
                 load_buttons()
+                load_exit_button()
+                load_special_power_button()
                 create_movement(PATH, enemys)
                 creation_map_objects()
                 starttime = time.time()
@@ -565,6 +687,9 @@ def ReInit():
     spawn_offset = []
 
 
+
+
+
 def display_state():
     """
 
@@ -575,7 +700,7 @@ def display_state():
         -Drawing of objects have to be ground up care about correct sequence
         -Test for enough frames per second
     """
-    global frames, Gold, game_state, WINDOW, pressed
+    global frames, Gold, game_state, WINDOW, pressed, special_power_button
 
     if game_state == 0:
         game_state = LoadMainScreen(win=WINDOW, sound= shootSound)
@@ -587,10 +712,11 @@ def display_state():
     elif game_state == 2:
         upgrade_Listener()
         handle_input()
-        draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, starttime, Gold)
+        draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, starttime, Gold, exit_button, special_power_button)
         draw_map(WINDOW, wayfields, towerfields)
         on_action()
         draw_enemys()
+        draw_present()
         draw_tower_bullets(frames, towerfields, enemys, bullet_image, shootSound)
         frames += 1
         Gold += 0.8
