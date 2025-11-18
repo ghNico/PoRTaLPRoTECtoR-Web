@@ -1,3 +1,6 @@
 numpy
 pygame
+pygame-ce
+pygame-menu
+pygame-menu-ce
 loguru

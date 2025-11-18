@@ -11,6 +11,7 @@ import asyncio
 import random
 from idlelib.run import exit_now
 from typing import Any
+from pygame_menu._scrollarea import ScrollArea
 
 from Tiles import *
 from Main_Screen import LoadMainScreen
@@ -18,13 +19,27 @@ from Drawing import *
 from Helper import *
 import numpy as np
 import time
+import pygame_menu
+
+
+GAME_DEFAULT_CURSOR = pygame.SYSTEM_CURSOR_CROSSHAIR
+
+SPECIAL_EFFECT_BONUS_GOLD = 1000
+
+X_COORDINATE_RESTART_BUTTON = 910
+Y_COORDINATE_RESTART_BUTTON = 690
+Y_COORDINATE_GAME_OVER_BUTTON = 400
+Y_COORDINATE_FINAL_SCORE = 700
+
+MAX_AMOUNT_OF_MAPS = 4
 
 SPECIAL_POWER_IMAGE_HEIGHT = 200
 SPECIAL_POWER_IMAGE_WIDTH = 200
 COLLECTED_PRESENTS=0
+EXISTING_PRESENT=0
 MAX_NUMBER_OF_PRESENTS=4
 
-LIKELIHOOD_PRESENT_CREATED = 0.01
+LIKELIHOOD_PRESENT_CREATED = 0.1
 
 # Player Values
 Gold = 1000
@@ -93,6 +108,8 @@ field_mini = pygame.image.load("assets/mini_map/empty_field.png")
 way_mini = pygame.image.load("assets/mini_map/way_field.png")
 background = pygame.image.load("assets/environment/Galaxy.jpg")
 background = pygame.transform.scale(background, (1920, 1080))
+menu = None
+frame = None
 
 # Sound:
 shootSound = None
@@ -130,19 +147,24 @@ def startup():
     Initialization of pygame
 
     """
-    global WINDOW, font, font_headline, font_basic, shootSound, backgroundMusic
+    global WINDOW, font, font_headline, font_basic, shootSound, backgroundMusic, frame, menu
     pygame.init()
     shootSound = pygame.mixer.Sound("assets/sounds/pew.wav")
     shootSound.set_volume(0.05)
     pygame.mixer.music.load("assets/sounds/music.mp3")
     pygame.mixer.music.set_volume(0.02)
     pygame.mixer.music.play(-1)
-    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
+    pygame.mouse.set_cursor(GAME_DEFAULT_CURSOR)
     pygame.display.set_caption("PoRTaL PRoTECtoR")
     pygame.display.set_icon(pygame.image.load('assets/icon.png'))
     font = pygame.font.SysFont('comicsans', 20)
     font_headline = pygame.font.SysFont('comicsans', 50, True, True)
     font_basic = pygame.font.SysFont('comicsans', 30, True)
+    menu = pygame_menu.Menu('Shop', 300, 400, theme=pygame_menu.themes.THEME_BLUE)
+    frame = menu.add.frame_v(300, 400, max_height=200, max_width=200)
+    frame.set_scrollarea(True)  # Enables scrolling
+
+
 
 
 def load_buttons():
@@ -235,11 +257,19 @@ def on_action():
                 selectedPosition = None
         handle_press_present(towerfields)
         handle_press_exit_button()
+        handle_press_special_power_button()
     elif not state:
         pressed = False
 
+def handle_press_special_power_button():
+    global special_power_button, Gold, COLLECTED_PRESENTS
+    if special_power_button.isOver() and COLLECTED_PRESENTS==MAX_NUMBER_OF_PRESENTS:
+        Gold+= SPECIAL_EFFECT_BONUS_GOLD
+        COLLECTED_PRESENTS = 0
+        update_special_power_button()
+
 def handle_press_present(towerfields):
-    global COLLECTED_PRESENTS
+    global COLLECTED_PRESENTS, EXISTING_PRESENT
     for t in towerfields:
         if t.isOver():
             selectedPosition = t
@@ -248,13 +278,15 @@ def handle_press_present(towerfields):
                 MAP[selectedPosition.y // 140, (selectedPosition.x - 50) // 140] = 0
                 update_map()
                 COLLECTED_PRESENTS += 1
-                update_special_power_button(COLLECTED_PRESENTS)
+                EXISTING_PRESENT -= 1
+                update_special_power_button()
 
 
 def handle_press_exit_button():
+    global game_state
     global exit_button
     if exit_button.isOver():
-        display_endscreen()
+        game_state = 3
 
 
 def handle_input():
@@ -505,21 +537,23 @@ def draw_enemys():
 
 
 def draw_present():
-    global MAP, COLLECTED_PRESENTS
+    global MAP, COLLECTED_PRESENTS, EXISTING_PRESENT
     add_present_zo_map = LIKELIHOOD_PRESENT_CREATED > random.random()
-    if add_present_zo_map and COLLECTED_PRESENTS<MAX_NUMBER_OF_PRESENTS:
+    if add_present_zo_map and EXISTING_PRESENT+COLLECTED_PRESENTS < MAX_NUMBER_OF_PRESENTS:
         present_y_coordinate=random.randint(0, MAP_Y_SIZE)
         present_x_coordinate=random.randint(0, MAP_X_SIZE)
         if MAP[present_y_coordinate, present_x_coordinate] == 0:
             MAP[present_y_coordinate, present_x_coordinate] = 7
+            EXISTING_PRESENT += 1
+            #TODO nicht sicher ob gebraucht wird
             update_map()
 
 
 
-def update_special_power_button(COLLECTED_PRESENTS):
-    global special_power_button
+def update_special_power_button():
+    global special_power_button, COLLECTED_PRESENTS
     if COLLECTED_PRESENTS ==0:
-        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image1, (200, 200)))
+        special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image, (200, 200)))
     elif COLLECTED_PRESENTS ==1:
         special_power_button = Button((255, 255, 255), 10, 870, 200, 200, pygame.transform.scale(special_effect_image1, (200, 200)))
     elif COLLECTED_PRESENTS ==2:
@@ -541,9 +575,9 @@ def draw_menue():
     """
     global maps, WINDOW, font_headline, font_basic
 
-    easy = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
-    medium = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
-    hard = [np.random.randint(1, 10000), np.random.randint(1, 10000), np.random.randint(1, 10000)]
+    easy = [np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS)]
+    medium = [np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS)]
+    hard = [np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS), np.random.randint(1, MAX_AMOUNT_OF_MAPS)]
     WINDOW.blit(background, (0, 0))
     headline = font_headline.render("Select a Map", True, (250, 250, 250))
     WINDOW.blit(headline, (960 - (headline.get_width() // 2), 50))
@@ -613,15 +647,19 @@ def draw_endscreen():
     Draws the Game Over screen
 
     """
-    global WINDOW, endscreenButtons
+    global WINDOW, endscreenButtons, wave
 
     WINDOW.blit(background, (0, 0))
     GameOverText = pygame.font.SysFont('comicsans', 100, True, True).render("Game Over", True, (0, 0, 0))
-    WINDOW.blit(GameOverText, (960 - GameOverText.get_width() // 2, 540 - GameOverText.get_height() // 2))
+    WINDOW.blit(GameOverText, (960 - GameOverText.get_width() // 2, Y_COORDINATE_GAME_OVER_BUTTON - GameOverText.get_height() // 2))
+    final_score = pygame.font.SysFont('comicsans', 30, True, True).render("You made it to wave: "+str(wave), True, (0, 0, 0))
+    WINDOW.blit(final_score, (960 - final_score.get_width() // 2, Y_COORDINATE_FINAL_SCORE - final_score.get_width() // 2))
+
+
 
     if endscreenButtons == []:
         endscreenButtons.append(
-            Button((255, 0, 0), 960 - 50, 640, 100, 100, restart))
+            Button((255, 0, 0), X_COORDINATE_RESTART_BUTTON, Y_COORDINATE_RESTART_BUTTON, 100, 100, restart))
     for btn in endscreenButtons:
         btn.draw(WINDOW)
 
@@ -657,11 +695,13 @@ def ReInit():
         -Values have to be the same as at the beginning
         -Only Call when Restart not during gaming
     """
-    global Gold, MAP, PATH, starttime, frames, game_state, pressed, maps, wayfields, towerfields, buttons, endscreenButtons, sideinfo, running, enemy_path, selectedEnemy, selectedTowerToBuild, selectedPosition, towerplace_bool, UserHealth, wave, offset, enemys, spawn_offset
+    global Gold, MAP, PATH, starttime, frames, game_state, pressed, maps, wayfields, towerfields, buttons, endscreenButtons, sideinfo, running, enemy_path, selectedEnemy, selectedTowerToBuild, selectedPosition, towerplace_bool, UserHealth, wave, offset, enemys, spawn_offset, COLLECTED_PRESENTS, EXISTING_PRESENT
 
     # Player Values
     Gold = 1000
     UserHealth = 100
+    COLLECTED_PRESENTS=0
+    EXISTING_PRESENT=0
 
     # Game Values
     MAP = None
@@ -686,6 +726,14 @@ def ReInit():
     enemys = []
     spawn_offset = []
 
+def handle_hover_events():
+    mouse_pos = pygame.mouse.get_pos()
+    hovering = special_power_button.rect.collidepoint(mouse_pos)
+
+    if hovering and COLLECTED_PRESENTS==MAX_NUMBER_OF_PRESENTS:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    else:
+        pygame.mouse.set_cursor(GAME_DEFAULT_CURSOR)
 
 
 
@@ -710,11 +758,13 @@ def display_state():
     elif game_state == 1:
         map_selection()
     elif game_state == 2:
+        menu.enable()
         upgrade_Listener()
         handle_input()
         draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, starttime, Gold, exit_button, special_power_button)
         draw_map(WINDOW, wayfields, towerfields)
         on_action()
+        handle_hover_events()
         draw_enemys()
         draw_present()
         draw_tower_bullets(frames, towerfields, enemys, bullet_image, shootSound)
@@ -738,12 +788,26 @@ shootSound.set_volume(0.05)
 pygame.mixer.music.load("assets/sounds/music.mp3")
 pygame.mixer.music.set_volume(0.02)
 pygame.mixer.music.play(-1)
-pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
+pygame.mouse.set_cursor(GAME_DEFAULT_CURSOR)
 pygame.display.set_caption("PoRTaL PRoTECtoR")
 pygame.display.set_icon(pygame.image.load('assets/icon.png'))
 font = pygame.font.SysFont('comicsans', 20)
 font_headline = pygame.font.SysFont('comicsans', 50, True, True)
 font_basic = pygame.font.SysFont('comicsans', 30, True)
+
+menu = pygame_menu.Menu('Shop', 300, 400, theme=pygame_menu.themes.THEME_BLUE)
+menu.set_absolute_position(500,700)
+frame = menu.add.frame_v(300, 400, max_height=200, max_width=200)
+scroll = ScrollArea(
+    area_width=250,
+    area_height=300,
+    scrollbar_thick=12,
+    scrollbars='position-south'  # correct
+)
+frame.set_scrollarea(scroll)  # Enables scrolling
+
+for i in range(5):
+    frame.pack(menu.add.button(f'Tower {i+1}', lambda x=i: print(f"Selected tower {x}")))
 
 async def main():
     while True:
@@ -751,6 +815,8 @@ async def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+        if menu.is_enabled():
+            menu.draw(WINDOW)
         display_state()
         pygame.display.update()
         await asyncio.sleep(0)
