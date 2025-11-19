@@ -1,5 +1,5 @@
-import pygame
 import time
+import pygame
 
 def draw_buttons(WINDOW,sideinfo, buttons):
     """
@@ -33,24 +33,24 @@ def draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, startti
     # Show Wave
     waveValue = pygame.font.SysFont('comicsans', 20).render(str(wave), True, (255, 255, 255))
     waveText = pygame.font.SysFont('comicsans', 20).render("Wave: ", True, (255, 255, 255))
-    WINDOW.blit(waveText, (1750, 900))
-    WINDOW.blit(waveValue, (1800, 900))
+    WINDOW.blit(waveText, (1250, 1300))
+    WINDOW.blit(waveValue, (1300, 1300))
     # Show Time
     timeValue = pygame.font.SysFont('comicsans', 20).render(str(int(time.time() - starttime)), True, (255, 255, 255))
     timeText = pygame.font.SysFont('comicsans', 20).render("Time: ", True, (255, 255, 255))
-    WINDOW.blit(timeText, (1750, 925))
-    WINDOW.blit(timeValue, (1800, 925))
+    WINDOW.blit(timeText, (1250, 1340))
+    WINDOW.blit(timeValue, (1300, 1340))
     # Show Gold:
     goldText = pygame.font.SysFont('comicsans', 20).render("Gold: ", True, (255, 255, 255))
     goldValue = pygame.font.SysFont('comicsans', 20).render(str(int(Gold)), True, (255, 255, 255))
-    WINDOW.blit(goldText, (1750, 950))
-    WINDOW.blit(goldValue, (1800, 950))
+    WINDOW.blit(goldText, (1250, 1380))
+    WINDOW.blit(goldValue, (1300, 1380))
     # Show Health:
     HealthText = pygame.font.SysFont('comicsans', 20).render("Health: ", True, (255, 255, 255))
-    WINDOW.blit(HealthText, (1750, 975))
+    WINDOW.blit(HealthText, (1250, 1420))
     actualHealth = 50 * UserHealth / 100
-    pygame.draw.rect(WINDOW, (255, 0, 0), (1800, 975, 50, 15))
-    pygame.draw.rect(WINDOW, (0, 255, 0), (1800, 975, actualHealth, 15))
+    pygame.draw.rect(WINDOW, (255, 0, 0), (1300, 1420, 50, 15))
+    pygame.draw.rect(WINDOW, (0, 255, 0), (1300, 1420, actualHealth, 15))
 
 def draw_map(WINDOW, wayfields, towerfields):
     """
@@ -79,9 +79,9 @@ def draw_mini_map(WINDOW, field_mini, way_mini, map, pos_x, pos_y):
         -check if the map is in 6x13 format
     """
     ty = pos_y
-    for y in range(6):
+    for y in range(8):
         tx = pos_x
-        for x in range(13):
+        for x in range(8):
             value = map[y, x]
             if value == 0:
                 WINDOW.blit(field_mini, (tx, ty))
@@ -130,5 +130,5 @@ def draw_tower_bullets(frames, towerfields, enemys, bullet_image, sound):
                     e.checkCollide(towerBullets)
 
             for t in towerBullets:
-                if t.x > 1920 or t.x<0 or t.y<0 or t.y>1080:
+                if t.x > 1440 or t.x<0 or t.y<0 or t.y>1440:
                     towerBullets.remove(t)

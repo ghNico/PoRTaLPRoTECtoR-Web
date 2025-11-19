@@ -60,7 +60,7 @@ def build_path(way, map, pos_x, pos_y):
 
     """
     map[pos_y, pos_x] = 0
-    if pos_x < 12 and map[pos_y, pos_x + 1] == 8:
+    if pos_x < 7 and map[pos_y, pos_x + 1] == 8:
         way.append(("right", pos_x + 1, pos_y))
         build_path(way, map, pos_x + 1, pos_y)
     elif pos_x > 0 and map[pos_y, pos_x - 1] == 8:
@@ -69,16 +69,16 @@ def build_path(way, map, pos_x, pos_y):
     elif pos_y > 0 and map[pos_y - 1, pos_x] == 8:
         way.append(("up", pos_x, pos_y - 1))
         build_path(way, map, pos_x, pos_y - 1)
-    elif pos_y < 5 and map[pos_y + 1, pos_x] == 8:
+    elif pos_y < 7 and map[pos_y + 1, pos_x] == 8:
         way.append(("down", pos_x, pos_y + 1))
         build_path(way, map, pos_x, pos_y + 1)
-    elif pos_x < 12 and map[pos_y, pos_x + 1] == 2:
+    elif pos_x < 7 and map[pos_y, pos_x + 1] == 2:
         way.append(("right", pos_x + 1, pos_y))
     elif pos_x > 0 and map[pos_y, pos_x - 1] == 2:
         way.append(("left", pos_x - 1, pos_y))
     elif pos_y > 0 and map[pos_y - 1, pos_x] == 2:
         way.append(("up", pos_x, pos_y - 1))
-    elif pos_y < 5 and map[pos_y + 1, pos_x] == 2:
+    elif pos_y < 7 and map[pos_y + 1, pos_x] == 2:
         way.append(("down", pos_x, pos_y + 1))
     return way
 
@@ -96,14 +96,14 @@ def distance_to_path(map, pos_x, pos_y):
     Returns: distance from 1 to 4 to the next way
 
     """
-    if pos_x < 12 and map[pos_y, pos_x + 1] == 8 or pos_x > 0 and map[pos_y, pos_x - 1] == 8 or pos_y > 0 and map[
-        pos_y - 1, pos_x] == 8 or pos_y < 5 and map[pos_y + 1, pos_x] == 8:
+    if pos_x < 7 and map[pos_y, pos_x + 1] == 8 or pos_x > 0 and map[pos_y, pos_x - 1] == 8 or pos_y > 0 and map[
+        pos_y - 1, pos_x] == 8 or pos_y < 7 and map[pos_y + 1, pos_x] == 8:
         return 1
-    elif pos_x < 11 and map[pos_y, pos_x + 2] == 8 or pos_x > 0 and map[pos_y, pos_x - 2] == 8 or pos_y > 0 and map[
-        pos_y - 2, pos_x] == 8 or pos_y < 4 and map[pos_y + 2, pos_x] == 8:
+    elif pos_x < 6 and map[pos_y, pos_x + 2] == 8 or pos_x > 0 and map[pos_y, pos_x - 2] == 8 or pos_y > 0 and map[
+        pos_y - 2, pos_x] == 8 or pos_y < 6 and map[pos_y + 2, pos_x] == 8:
         return 2
-    elif pos_x < 10 and map[pos_y, pos_x + 3] == 8 or pos_x > 0 and map[pos_y, pos_x - 3] == 8 or pos_y > 0 and map[
-        pos_y - 3, pos_x] == 8 or pos_y < 3 and map[pos_y + 3, pos_x] == 8:
+    elif pos_x < 5 and map[pos_y, pos_x + 3] == 8 or pos_x > 0 and map[pos_y, pos_x - 3] == 8 or pos_y > 0 and map[
+        pos_y - 3, pos_x] == 8 or pos_y < 5 and map[pos_y + 3, pos_x] == 8:
         return 3
     else:
         return 4
@@ -125,9 +125,9 @@ def generate_obstacles(map):
     """
     k = map
     sum_obstacles = 0
-    while sum_obstacles < 12:
-        for y in range(6):
-            for x in range(13):
+    while sum_obstacles < 8:
+        for y in range(8):
+            for x in range(8):
                 if k[y, x] == 0:
                     distance = distance_to_path(map, x, y)
                     value = np.random.randint(0, 100)
