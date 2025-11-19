@@ -266,8 +266,8 @@ class Tower(Tiles):
         self.towerRange = int(int(self.towerRange)*(1.2))
         first_place = (self.value % 10)-1
         second_place = (self.value // 10) - 1
-        self.image = pygame.transform.scale(tower_image[second_place][first_place], (140, 140))
-        self.image2 = pygame.transform.scale(tower_image2[second_place][first_place], (140, 140))
+        self.image = pygame.transform.scale(tower_image[second_place][first_place], (160, 160))
+        self.image2 = pygame.transform.scale(tower_image2[second_place][first_place], (160, 160))
         return self
 
     def showRange(self, win):
@@ -280,7 +280,7 @@ class Tower(Tiles):
             -resolution of pygame window matches the surface resolution
 
         """
-        Range = pygame.Surface((1920, 1080), pygame.SRCALPHA, 32)
+        Range = pygame.Surface((1440, 1440), pygame.SRCALPHA, 32)
         pygame.draw.circle(Range, (255,0, 0, 80), (self.x+self.width//2, self.y+self.height//2), self.towerRange)
         win.blit(Range, (0,0))
 
