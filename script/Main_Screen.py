@@ -38,6 +38,7 @@ AimX = 0
 AimY = 0
 
 def LoadMainScreen(win, sound):
+    #TODO hier noch schauen wegen dem exit button
     """
     Draws the launch screen at the startup, tower animation and mouse follow, shoot animation, and start game when pressing the start button
 

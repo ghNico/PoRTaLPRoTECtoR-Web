@@ -381,12 +381,13 @@ class Informations(Tower):
 
     Based on Tower object based on Tiles object
     """
-    def __init__(self, x, y, width, height, image, image2, costs, towerRange, damage, value, headline='', name='', description=''):
+    def __init__(self, x, y, width, height, image, image2, costs, towerRange, damage, value, headline='', name='', description='', sizeMenu=0):
         super().__init__(x, y, width, height, image, image2, towerRange, damage, value, costs)
         self.headline = headline
         self.name = name
         self.description = description
         self.rect = pygame.Rect(x, y, width, height)
+        self.sizeMenu = sizeMenu
 
     def draw(self, win):
         """
@@ -398,8 +399,17 @@ class Informations(Tower):
             -resolution of pygame window 1920x1080
             -correct display of text on screen
         """
-        win.blit(self.image, (self.x, self.y))
-        win.blit(self.image2, (self.x, self.y))
+        if self.sizeMenu == 0:
+            win.blit(self.image, (self.x, self.y))
+            win.blit(self.image2, (self.x, self.y))
+        else:
+            twq = pygame.transform.scale(self.image, (self.sizeMenu, self.sizeMenu))
+            u = pygame.transform.scale(self.image2, (self.sizeMenu, self.sizeMenu))
+
+            win.blit(twq, (self.x, self.y))
+            win.blit(u, (self.x, self.y))
+
+
         font = pygame.font.SysFont('comicsans', 20)
         font_headline = pygame.font.SysFont('comicsans', 20, True, True)
         headline = font_headline.render(self.headline, True, (250, 250, 250))
@@ -409,7 +419,7 @@ class Informations(Tower):
         towerRange = font.render("Additional Range: " + str(self.towerRange), True, (250, 250, 250))
         damage = font.render("Additional Damage: " + str(self.damage), True, (250, 250, 250))
         if self.headline == '':
-            win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height) + 20))
+            win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height)))
             win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
         elif self.headline == 'Upgrade':
             win.blit(headline, (self.x + (self.width / 2 - headline.get_width() / 2), self.y - 20))

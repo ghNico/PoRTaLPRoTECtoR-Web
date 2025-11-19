@@ -1,7 +1,7 @@
 import time
 import pygame
 
-def draw_buttons(WINDOW,sideinfo, buttons):
+def draw_buttons(WINDOW,sideinfo, buttons, exit_button, special_power_button):
     """
     Draws the button list and the side info for tower upgrades
 
@@ -12,12 +12,15 @@ def draw_buttons(WINDOW,sideinfo, buttons):
         -check if sideinfo is shown correctly
 
     """
+    # todo hier werden die Türme gezeichnet
     for k in buttons:
         k.draw(WINDOW)
 
     sideinfo.draw(WINDOW)
+    exit_button.draw(WINDOW)
+    special_power_button.draw(WINDOW)
 
-def draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, starttime, Gold):
+def draw_window(WINDOW, UserHealth, sideinfo, buttons, wave, starttime, Gold, exit_button, special_power_button):
     """
     Draws the game window with background and game stats on the left-down corner and draw buttons on top of background
 
@@ -28,8 +31,8 @@ def draw_window(WINDOW, UserHealth, background, sideinfo, buttons, wave, startti
         -check if the window resolution is 1920x1080
 
     """
-    WINDOW.blit(background, (0, 0))
-    draw_buttons(WINDOW,sideinfo, buttons)
+    WINDOW.fill((0, 0, 50))
+    draw_buttons(WINDOW,sideinfo, buttons, exit_button, special_power_button)
     # Show Wave
     waveValue = pygame.font.SysFont('comicsans', 20).render(str(wave), True, (255, 255, 255))
     waveText = pygame.font.SysFont('comicsans', 20).render("Wave: ", True, (255, 255, 255))
