@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Protector</title>
+    <style>
+        /* Kein Zugriff auf html, body, :root - daher Container-basiert */
+        .game-container {
+            width: 100%;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            font-family: system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .game-header h1 {
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .game-wrapper {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .game-frame {
+            width: 100%;
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loading-content h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #22c55e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-width: 500px;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+    <div class="game-header">
+        <h1>🎄 Portal Protector</h1>
+        <div class="info-text">Verteidigung gegen die Weihnachtsinvasion!</div>
+    </div>
+
+    <div class="game-wrapper">
+        <iframe
+                id="gameFrame"
+                src="http://localhost:8000"
+                class="game-frame"
+                allow="fullscreen; gamepad; autoplay; accelerometer; gyroscope"
+                allowfullscreen
+                loading="eager">
+        </iframe>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h2>🎮 Portal Protector wird geladen...</h2>
+            <p>Einen Moment Geduld...</p>
+            <div class="error-message" id="errorMessage">
+                ⚠️ Spiel konnte nicht geladen werden.<br>
+                Stelle sicher, dass der Pygbag-Server läuft.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Shadow DOM kompatibles Script
+    document.addEventListener("shadowDOMReady", (event) => {
+        const root = event.detail.shadowRoot;
+
+        // Alle Selektoren auf root umstellen
+        const gameFrame = root.getElementById('gameFrame');
+        const loadingOverlay = root.getElementById('loadingOverlay');
+        const errorMessage = root.getElementById('errorMessage');
+
+        // Loading-Animation ausblenden wenn iFrame geladen ist
+        gameFrame.addEventListener('load', () => {
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 500);
+        });
+
+        // Error handling wenn iFrame nicht lädt
+        gameFrame.addEventListener('error', () => {
+            errorMessage.classList.add('visible');
+        });
+
+        // Timeout für langsame Ladezeiten
+        setTimeout(() => {
+            if (!loadingOverlay.classList.contains('hidden')) {
+                errorMessage.classList.add('visible');
+            }
+        }, 10000); // 10 Sekunden Timeout
+    });
+
+    // Fallback falls shadowDOMReady nicht gefeuert wird (lokales Testing)
+    if (!window.shadowDOMEventFired) {
+        window.addEventListener('DOMContentLoaded', () => {
+            const gameFrame = document.getElementById('gameFrame');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const errorMessage = document.getElementById('errorMessage');
+
+            gameFrame.addEventListener('load', () => {
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                }, 500);
+            });
+
+            gameFrame.addEventListener('error', () => {
+                errorMessage.classList.add('visible');
+            });
+
+            setTimeout(() => {
+                if (!loadingOverlay.classList.contains('hidden')) {
+                    errorMessage.classList.add('visible');
+                }
+            }, 10000);
+        });
+    }
+</script>
+</body>
+</html>

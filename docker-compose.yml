@@ -1,0 +1,27 @@
+services:
+  frontend:
+    build:
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    pull_policy: build
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portal.entrypoints=http"
+      - "traefik.http.routers.portal.rule=Host(`portal.test.pep-digital.de`)"
+      - "traefik.http.middlewares.portal-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.portal.middlewares=portal-https-redirect"
+      - "traefik.http.routers.portal-secure.entrypoints=https"
+      - "traefik.http.routers.portal-secure.rule=Host(`portal.test.pep-digital.de`)"
+      - "traefik.http.routers.portal-secure.tls=true"
+      - "traefik.http.routers.portal-secure.tls.certresolver=http"
+      - "traefik.http.routers.portal-secure.service=portal"
+      - "traefik.http.services.portal.loadbalancer.server.port=8000"
+      - "traefik.docker.network=proxy"
+    ports:
+      - "8000:8000"
+
+networks:
+  proxy:
+    external: true
