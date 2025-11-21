@@ -1,35 +1,36 @@
-FROM ubuntu:24.04
+FROM python:3.12-slim
 
 LABEL maintainer="nico"
 LABEL description="Pygame Portal Protector with Pygbag"
 
-ENV DEBIAN_FRONTEND=noninteractive
-
 WORKDIR /app
 
-# Python 3.12 ist in Ubuntu 24.04 bereits dabei
+# Erweiterte System-Dependencies für Pygame + Pygbag
 RUN apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-venv \
-    python3-pip \
     gcc \
     g++ \
     make \
     ffmpeg \
+    mime-support \
+    libjpeg-dev \
+    libpng-dev \
+    libfreetype6-dev \
+    libsdl2-dev \
+    libsdl2-image-dev \
+    libsdl2-mixer-dev \
+    libsdl2-ttf-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Python als Standard
-RUN ln -s /usr/bin/python3.12 /usr/bin/python
-
-# Pip upgraden
-RUN python3.12 -m pip install --upgrade pip
-
+# Python Dependencies
 COPY requirements.txt .
-RUN python3.12 -m pip install --no-cache-dir -r requirements.txt
-RUN python3.12 -m pip install --no-cache-dir black
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Optional: Black für Code-Optimierung
+RUN pip install --no-cache-dir black
+
+# Game-Dateien kopieren
 COPY . /app/
 
 EXPOSE 8000
 
-CMD ["python3.12", "-m", "pygbag", "--title", "PortalProtector", "script"]
+CMD ["pygbag", "--title", "PortalProtector", "script"]
