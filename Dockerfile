@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
     g++ \
     make \
     ffmpeg \
-    mime-support \
     libjpeg-dev \
     libpng-dev \
     libfreetype6-dev \
