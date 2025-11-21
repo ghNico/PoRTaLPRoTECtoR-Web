@@ -427,10 +427,25 @@ class Informations(Tower):
             win.blit(damage,
                      (self.x + (self.width / 2 - damage.get_width() / 2), self.y + (self.height) + 10))
             win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 30))
+        elif self.sizeMenu:
+            win.blit(headline, (self.x + (self.sizeMenu / 2 - headline.get_width() / 2), self.y - 20))
+            win.blit(name, (self.x + (self.sizeMenu / 2 - name.get_width() / 2), self.y + (self.sizeMenu)))
+            win.blit(description,
+                     (self.x + (self.sizeMenu / 2 - description.get_width() / 2), self.y + (self.sizeMenu) + 20))
+            win.blit(costs, (self.x + (self.sizeMenu / 2 - costs.get_width() / 2), self.y + (self.sizeMenu) + 40))
         else:
             win.blit(headline, (self.x + (self.width / 2 - headline.get_width() / 2), self.y - 20))
             win.blit(name, (self.x + (self.width / 2 - name.get_width() / 2), self.y + (self.height)))
             win.blit(description,
                      (self.x + (self.width / 2 - description.get_width() / 2), self.y + (self.height) + 20))
             win.blit(costs, (self.x + (self.width / 2 - costs.get_width() / 2), self.y + (self.height) + 40))
+
+    # TODO wieso geht nicht
+    def get_hover_state(self, gold: int,  mouse_pos: tuple[int, int]):
+        if self.rect.collidepoint(mouse_pos):
+            if gold > self.costs:
+                return pygame.SYSTEM_CURSOR_HAND
+            else:
+                return pygame.SYSTEM_CURSOR_NO
+        return None
 

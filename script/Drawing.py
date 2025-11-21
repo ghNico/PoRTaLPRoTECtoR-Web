@@ -1,6 +1,7 @@
 import time
 import pygame
 
+
 def draw_buttons(WINDOW,sideinfo, buttons, exit_button, special_power_button):
     """
     Draws the button list and the side info for tower upgrades
@@ -31,7 +32,7 @@ def draw_window(WINDOW, UserHealth, sideinfo, buttons, wave, starttime, Gold, ex
         -check if the window resolution is 1920x1080
 
     """
-    WINDOW.fill((0, 0, 50))
+    WINDOW.fill((27, 36, 53))
     draw_buttons(WINDOW,sideinfo, buttons, exit_button, special_power_button)
     # Show Wave
     waveValue = pygame.font.SysFont('comicsans', 20).render(str(wave), True, (255, 255, 255))
@@ -68,7 +69,7 @@ def draw_map(WINDOW, wayfields, towerfields):
     for way in wayfields:
         way.draw(WINDOW)
 
-    for tower in towerfields:
+    for tower in towerfields.values():
         tower.draw(WINDOW)
 
 def draw_mini_map(WINDOW, field_mini, way_mini, map, pos_x, pos_y):
@@ -104,7 +105,7 @@ def draw_tower_range(WINDOW, towerfields):
         -showRange function of tower draws the range indicator
     """
 
-    for t in towerfields:
+    for t in towerfields.values():
         if t.isOver():
             t.showRange(WINDOW)
 
@@ -120,12 +121,12 @@ def draw_tower_bullets(frames, towerfields, enemys, bullet_image, sound):
     """
 
     if frames%8 == 0:
-        for t in towerfields:
+        for t in towerfields.values():
             if t.getValue() != None:
                 bulletValue = t.getValue()%10 - 1
                 t.findEnemys(enemys, bullet_image[bulletValue], sound)
 
-    for t in towerfields:
+    for t in towerfields.values():
         towerBullets = t.getTowerLst()
         if towerBullets != None and towerBullets != []:
             for e in enemys:

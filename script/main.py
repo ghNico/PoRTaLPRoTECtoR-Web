@@ -18,12 +18,15 @@ from Helper import *
 import numpy as np
 import time
 
+MAP_SIZE = 8
+
 Y_COORDINATE_TOWER_BUTTONS = 1300
 
 X_COORDINATE_ENSREEN_TEXTS = 720
 
 Y_COORDINATE_SPECIAL_POWER_BUTTON = 1300
-X_COORDINATE_SPECIAL_POWER_BUTTON = 240
+X_COORDINATE_SPECIAL_POWER_BUTTON = 270
+SPECIAL_POWER_BUTTON_SIZE=120
 
 DEFAULT_TILE_SIZE = 160
 
@@ -59,7 +62,7 @@ game_state = 0
 pressed = False
 maps = []
 wayfields = []
-towerfields = []
+towerfields: dict[int, Tiles] = {}
 buttons = []
 exit_button:Button
 special_power_button:Button
@@ -111,7 +114,7 @@ curve4 = pygame.transform.rotate(curve1, 270)
 field_mini = pygame.image.load("assets/mini_map/empty_field.png")
 way_mini = pygame.image.load("assets/mini_map/way_field.png")
 background = pygame.image.load("assets/environment/Galaxy.png")
-background = pygame.transform.scale(background, (1440, 1440))
+background = pygame.transform.scale(background, (1440, 1540))
 background_color = (0, 0, 50)
 menu = None
 frame = None
@@ -200,11 +203,11 @@ def load_buttons():
 
 def load_exit_button():
     global exit_button
-    exit_button=Button((255, 0, 0), 1250, 1380, 50, 50, pygame.transform.scale(exit_image, (50, 50)), "game stop")
+    exit_button=Button((255, 0, 0), 1250, 1460, 50, 50, pygame.transform.scale(exit_image, (50, 50)), "game stop")
 
 def load_special_power_button():
     global special_power_button
-    special_power_button=Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), "use special power")
+    special_power_button=Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)), "use special power")
 
 
 
@@ -228,7 +231,7 @@ def on_action():
         for k in buttons:
             if k.isOver():
                 selectedTowerToBuild = k
-        for t in towerfields:
+        for t in towerfields.values():
             if t.isOver():
                 selectedPosition = t
         if sideinfo.isOver() and selectedPosition is not None:
@@ -255,7 +258,7 @@ def handle_press_special_power_button():
 
 def handle_press_present(towerfields):
     global COLLECTED_PRESENTS, EXISTING_PRESENT
-    for t in towerfields:
+    for t in towerfields.values():
         if t.isOver():
             selectedPosition = t
             value = MAP[selectedPosition.y // DEFAULT_TILE_SIZE, (selectedPosition.x - 50) // DEFAULT_TILE_SIZE]
@@ -301,9 +304,9 @@ def handle_input():
             if Gold >= int(selectedTowerToBuild.costs):
                 value = 10 + int(selectedTowerToBuild.name[6:])
                 MAP[selectedPosition.y // DEFAULT_TILE_SIZE, (selectedPosition.x - 50) // DEFAULT_TILE_SIZE] = value
-                for f in range(len(towerfields)):
-                    if towerfields[f] == selectedPosition:
-                        towerfields[f] = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width,
+                for k in towerfields.keys():
+                    if towerfields[k] == selectedPosition:
+                        towerfields[k] = Tower(selectedPosition.x, selectedPosition.y, selectedPosition.width,
                                                selectedPosition.height, selectedTowerToBuild.image,
                                                selectedTowerToBuild.image2, selectedTowerToBuild.towerRange,
                                                selectedTowerToBuild.damage, value, selectedTowerToBuild.costs)
@@ -392,23 +395,22 @@ def draw_path(path_pos):
     elif current_pos == 'right' and next_pos == 'up' or current_pos == 'down' and next_pos == 'left':
         wayfields.append(Tiles(pos_x, pos_y, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, curve4))
 
-#TODO wird benötigt?
 def update_map():
     global towerplace_bool, MAP, towerfields
-    count_ways = 0
-    ty = 0
-    for y in range(8):
-        tx = 0
-        if y > 0:
-            tx = 50
-        for x in range(8):
+    for y in range(MAP_SIZE):
+        for x in range(MAP_SIZE):
             value = MAP[y, x]
             if value == 0:
-                towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, clickable_field))
+                current_towerfield  = towerfields[y * MAP_SIZE + x]
+                new_x = current_towerfield.x
+                new_y = current_towerfield.y
+                towerfields[y * MAP_SIZE + x] = Tiles(new_x, new_y, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, clickable_field)
             if value == 7:
-                append_presents(towerfields, tx, ty)
-            tx += DEFAULT_TILE_SIZE
-        ty += DEFAULT_TILE_SIZE
+                current_towerfield = towerfields[y * MAP_SIZE + x]
+                new_x = current_towerfield.x
+                new_y = current_towerfield.y
+                towerfields[getCurrentMapIndex(x, y)] = Tiles(new_x, new_y, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE,
+                                                              present_obstacle_map)
     towerplace_bool = True
 
 def creation_map_objects():
@@ -424,47 +426,48 @@ def creation_map_objects():
     global towerplace_bool, MAP, towerfields
     count_ways = 0
     ty = 0
-    for y in range(8):
+    for y in range(MAP_SIZE):
         tx = 0
         if y > 0:
             tx = 50
-        for x in range(8):
+        for x in range(MAP_SIZE):
             value = MAP[y, x]
             if value == 0:
                 if not towerplace_bool:
-                    towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, clickable_field))
+                    towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, clickable_field)
             elif value == 5:
-                append_random_obstacles(towerfields, tx, ty)
+                append_random_obstacles(towerfields, x,y,tx, ty)
             elif value == 7:
-                append_presents(towerfields, tx, ty)
+                towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, present_obstacle_map)
             elif value == 8:
                 draw_path(count_ways)
                 count_ways += 1
             elif value == 1:
                 tx += 50
-                towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, start_map))
+                towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, start_map)
             elif value == 2:
-                towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, end_map))
+                towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, end_map)
             elif 10 < value < 39:
                 first_place = value % 10
                 second_place = value // 10
-                towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, tower_image[second_place - 1][first_place - 1]))
+                towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, tower_image[second_place - 1][first_place - 1])
             tx += DEFAULT_TILE_SIZE
         ty += DEFAULT_TILE_SIZE
     towerplace_bool = True
 
+def getCurrentMapIndex(x:int,y:int):
+    return y * MAP_SIZE + x
 
-def append_random_obstacles(towerfields: list[Any], tx: int | Any, ty: int):
+
+def append_random_obstacles(towerfields, x:int, y:int, tx: int | Any, ty: int):
     random_value = random.random()
     if random_value<0.33:
-        towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, obstacle_map))
+        towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, obstacle_map)
     elif random_value<0.66:
-        towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, christmas_tree_obstacle_map))
+        towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, christmas_tree_obstacle_map)
     else:
-        towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, christmas_wreath_obstacle_map))
+        towerfields[getCurrentMapIndex(x,y)]=Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, christmas_wreath_obstacle_map)
 
-def append_presents(towerfields, tx, ty):
-    towerfields.append(Tiles(tx, ty, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, present_obstacle_map))
 
 def draw_enemys():
     """
@@ -538,15 +541,15 @@ def draw_present():
 def update_special_power_button():
     global special_power_button, COLLECTED_PRESENTS, DEFAULT_TILE_SIZE
     if COLLECTED_PRESENTS ==0:
-        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)))
+        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)))
     elif COLLECTED_PRESENTS ==1:
-        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image1, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)))
+        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image1, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)))
     elif COLLECTED_PRESENTS ==2:
-        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image2, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)))
+        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image2, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)))
     elif COLLECTED_PRESENTS ==3:
-        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image3, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)))
+        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image3, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)))
     elif COLLECTED_PRESENTS ==4:
-        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(special_effect_image4, (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)))
+        special_power_button = Button((255, 255, 255), X_COORDINATE_SPECIAL_POWER_BUTTON, Y_COORDINATE_SPECIAL_POWER_BUTTON, SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE, pygame.transform.scale(special_effect_image4, (SPECIAL_POWER_BUTTON_SIZE, SPECIAL_POWER_BUTTON_SIZE)))
 
 def draw_menue():
     """
@@ -688,7 +691,7 @@ def ReInit():
     pressed = False
     maps = []
     wayfields = []
-    towerfields = []
+    towerfields = {}
     buttons = []
     endscreenButtons = []
     sideinfo = None
@@ -702,11 +705,27 @@ def ReInit():
     enemys = []
     spawn_offset = []
 
-def handle_hover_events():
-    mouse_pos = pygame.mouse.get_pos()
-    hovering = special_power_button.rect.collidepoint(mouse_pos)
 
-    if hovering and COLLECTED_PRESENTS==MAX_NUMBER_OF_PRESENTS:
+def handle_hover_towers(mouse_pos: tuple[int, int]):
+    global buttons
+    for information_button in buttons:
+        new_cursor = information_button.get_hover_state(Gold, mouse_pos)
+        if new_cursor:
+            pygame.mouse.set_cursor(new_cursor)
+
+
+def handle_hover_events():
+    global Gold
+    mouse_pos = pygame.mouse.get_pos()
+    # doesent work at the moment
+    # handle_hover_towers(mouse_pos)
+
+    if special_power_button.rect.collidepoint(mouse_pos):
+        if COLLECTED_PRESENTS==MAX_NUMBER_OF_PRESENTS:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_NO)
+    elif exit_button.rect.collidepoint(mouse_pos):
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
     else:
         pygame.mouse.set_cursor(GAME_DEFAULT_CURSOR)
@@ -756,7 +775,7 @@ def display_state():
 
 # Main Loop to call States with 60fps and update the pygame window
 pygame.init()
-WINDOW= pygame.display.set_mode((1440, 1440))
+WINDOW= pygame.display.set_mode((1440, 1540))
 clock = pygame.time.Clock()
 shootSound = pygame.mixer.Sound("assets/sounds/pew.ogg")
 shootSound.set_volume(0.05)

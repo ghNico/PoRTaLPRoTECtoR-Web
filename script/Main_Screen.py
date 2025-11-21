@@ -3,7 +3,7 @@ import pygame
 
 # texture load for start screen:
 background = pygame.image.load("assets/environment/Galaxy.png")
-background = pygame.transform.scale(background, (1440, 1440))
+background = pygame.transform.scale(background, (1440, 1540))
 button1 = pygame.image.load("assets/environment/Button_Start (1).png")
 button1 = pygame.transform.scale(button1, (300,300))
 button2 = pygame.image.load("assets/environment/Button_Start (2).png")
