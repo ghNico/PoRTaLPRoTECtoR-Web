@@ -84,8 +84,8 @@ font_headline = None
 font_basic = None
 
 # Textures:
-restart = pygame.transform.scale(pygame.image.load("assets/environment/restart.jpg"),(DEFAULT_TILE_SIZE,DEFAULT_TILE_SIZE))
-exit_image = pygame.transform.scale(pygame.image.load("assets/environment/exit.jpg"),(DEFAULT_TILE_SIZE,DEFAULT_TILE_SIZE))
+restart = pygame.transform.scale(pygame.image.load("assets/environment/restart.png"),(DEFAULT_TILE_SIZE,DEFAULT_TILE_SIZE))
+exit_image = pygame.transform.scale(pygame.image.load("assets/environment/exit.png"),(DEFAULT_TILE_SIZE,DEFAULT_TILE_SIZE))
 start_map = pygame.transform.scale(pygame.image.load('assets/environment/portal.png'), (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE))
 end_map = pygame.transform.scale(pygame.image.load('assets/environment/portal_red.png'), (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE))
 way_horizontal = pygame.transform.scale(pygame.image.load("assets/tiles/Gerade.png"), (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE))
@@ -182,24 +182,24 @@ def load_buttons():
     global buttons
     buttons.append(
         Informations(x=450, y=Y_COORDINATE_TOWER_BUTTONS, width=DEFAULT_TILE_SIZE, height=DEFAULT_TILE_SIZE, image=pygame.transform.scale(tower_image[0][0], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     image2=pygame.transform.scale(tower_image2[0][0], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), costs=250, towerRange=200,
-                     damage=30, value=11, headline="Frost", name="Tower 1", description="Out of the Iceage", sizeMenu=100))
+                     image2=pygame.transform.scale(tower_image2[0][0], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), costs=250, towerRange=400,
+                     damage=20, value=11, headline="Sniper", name="Tower 1", description="20 dmg long range", sizeMenu=100))
     buttons.append(
         Informations(x=610, y=Y_COORDINATE_TOWER_BUTTONS, width=DEFAULT_TILE_SIZE, height=DEFAULT_TILE_SIZE, image=pygame.transform.scale(tower_image[0][1], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     image2=pygame.transform.scale(tower_image2[0][1], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), costs=300, towerRange=225, damage=35,
-                     value=12, headline="Inferno", name="Tower 2", description="Iron Dome", sizeMenu=100))
+                     image2=pygame.transform.scale(tower_image2[0][1], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), costs=300, towerRange=375, damage=30,
+                     value=12, headline="Rocket", name="Tower 2", description="30 dmg", sizeMenu=100))
     buttons.append(
         Informations(770, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 350, 275, 45, 14, "Devil", "Tower 4",
-                     "Not a real sparrow", sizeMenu=100))
+                     pygame.transform.scale(tower_image2[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 350, 350, 40, 13, "Inferno", "Tower 3",
+                     "40 dmg medium range", sizeMenu=100))
     buttons.append(
         Informations(930, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 375, 300, 50, 15, "Alfi Deluxe", "Tower 5",
-                     "mit 1.0 bestanden ;)", sizeMenu=100))
+                     pygame.transform.scale(tower_image2[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 375, 325, 50, 14, "Power Deluxe", "Tower 4",
+                     "50 dmg", sizeMenu=100))
     buttons.append(
         Informations(1090, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][5], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][5], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 400, 325, 55, 16, "Mega Blizzard", "Tower 6",
-                     "Really Cold", sizeMenu=100))
+                     pygame.transform.scale(tower_image2[0][5], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 400, 300, 60, 15, "Mega Blizzard", "Tower 5",
+                     "60 dmg short range", sizeMenu=100))
 
 def load_exit_button():
     global exit_button
@@ -630,7 +630,7 @@ def draw_endscreen():
 
     WINDOW.blit(background, (0, 0))
     GameOverText = pygame.font.SysFont('comicsans', 100, True, True).render("Game Over", True, (0, 0, 0))
-    Y_COORDINATE_GAME_OVER = 550
+    Y_COORDINATE_GAME_OVER = 650
     WINDOW.blit(GameOverText, (X_COORDINATE_ENSREEN_TEXTS - GameOverText.get_width() // 2, Y_COORDINATE_GAME_OVER - GameOverText.get_height() // 2))
     final_score = pygame.font.SysFont('comicsans', 30, True, True).render("You made it to wave: " + str(wave), True,(0, 0, 0))
     Y_COORDINATE_FINAL_SCORE = 850
