@@ -36,4 +36,4 @@ RUN echo "application/wasm wasm" >> /etc/mime.types
 EXPOSE 8000
 
 # Pygbag mit expliziten Server-Optionen starten
-CMD ["pygbag", "--PYBUILD", "3.12", "--title", "PortalProtector", "script"]
+CMD ["pygbag", "--cdn", "portal.test.pep-digital.de/",  "--bind", "0.0.0.0", "--PYBUILD", "3.12", "--title", "PortalProtector", "script"]
