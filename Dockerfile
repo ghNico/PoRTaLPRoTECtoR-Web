@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-trixie
 
 LABEL maintainer="nico"
 LABEL description="Pygame Portal Protector with Pygbag"
@@ -30,6 +30,10 @@ RUN pip install --no-cache-dir black
 # Game-Dateien kopieren
 COPY . /app/
 
+# MIME-Type-Konfiguration für WASM
+RUN echo "application/wasm wasm" >> /etc/mime.types
+
 EXPOSE 8000
 
-CMD ["pygbag", "--title", "PortalProtector", "script"]
+# Pygbag mit expliziten Server-Optionen starten
+CMD ["pygbag", "--bind", "0.0.0.0", "--PYBUILD", "3.12", "--title", "PortalProtector", "script"]

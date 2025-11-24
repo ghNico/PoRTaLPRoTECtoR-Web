@@ -19,9 +19,6 @@ services:
       - "traefik.http.routers.portal-secure.service=portal"
       - "traefik.http.services.portal.loadbalancer.server.port=8000"
       - "traefik.docker.network=proxy"
-    ports:
-      - "8000:8000"
-
 networks:
   proxy:
     external: true
