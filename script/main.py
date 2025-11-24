@@ -190,15 +190,15 @@ def load_buttons():
                      value=12, headline="Rocket", name="Tower 2", description="30 dmg", sizeMenu=100))
     buttons.append(
         Informations(770, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 350, 350, 40, 13, "Inferno", "Tower 3",
+                     pygame.transform.scale(tower_image2[0][2], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 350, 350, 40, 13, "Inferno", "Tower 3",
                      "40 dmg medium range", sizeMenu=100))
     buttons.append(
         Informations(930, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 375, 325, 50, 14, "Power Deluxe", "Tower 4",
+                     pygame.transform.scale(tower_image2[0][3], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 375, 325, 50, 14, "Power Deluxe", "Tower 4",
                      "50 dmg", sizeMenu=100))
     buttons.append(
         Informations(1090, Y_COORDINATE_TOWER_BUTTONS, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, pygame.transform.scale(tower_image[0][5], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)),
-                     pygame.transform.scale(tower_image2[0][5], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 400, 300, 60, 15, "Mega Blizzard", "Tower 5",
+                     pygame.transform.scale(tower_image2[0][4], (DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE)), 400, 300, 60, 15, "Mega Blizzard", "Tower 5",
                      "60 dmg short range", sizeMenu=100))
 
 def load_exit_button():
